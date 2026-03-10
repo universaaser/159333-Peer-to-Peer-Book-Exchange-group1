@@ -12,6 +12,8 @@ app.use(express.json());
 // 路由
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/listings', require('./routes/listings'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/transactions', require('./routes/transactions'));
 
 // 测试路由
 app.get('/', (req, res) => {
