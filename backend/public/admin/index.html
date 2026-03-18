@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>P2P Book Exchange Admin</title>
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>P2P Admin Console</h1>
+        <p>Moderation, approvals, and reports</p>
+      </div>
+      <div class="health">
+        <button id="health-check">Server Health</button>
+        <span id="health-result">Idle</span>
+      </div>
+    </header>
+
+    <section class="auth">
+      <label>
+        API Base
+        <input id="api-base" type="text" value="/api" />
+      </label>
+      <label>
+        Admin Email
+        <input id="login-email" type="email" placeholder="admin@example.com" />
+      </label>
+      <label>
+        Password
+        <input id="login-password" type="password" placeholder="Password" />
+      </label>
+      <div class="auth-actions">
+        <button id="login-submit">Login</button>
+        <button id="logout-submit" class="secondary">Logout</button>
+        <span id="login-status" class="muted">Not logged in</span>
+      </div>
+    </section>
+
+    <section class="auth secondary">
+      <label>
+        Admin Token (Advanced)
+        <input id="token" type="password" placeholder="Bearer token" />
+      </label>
+      <button id="save-token">Save Token</button>
+    </section>
+
+    <main class="grid">
+      <section class="panel">
+        <header>
+          <h2>Pending Approval</h2>
+          <button id="load-pending">Refresh</button>
+        </header>
+        <div id="pending-list"></div>
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Flagged Listings</h2>
+          <button id="load-flagged">Refresh</button>
+        </header>
+        <div id="flagged-list"></div>
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Reports</h2>
+          <div class="row">
+            <select id="report-status">
+              <option value="">All</option>
+              <option value="open" selected>Open</option>
+              <option value="reviewing">Reviewing</option>
+              <option value="closed">Closed</option>
+            </select>
+            <button id="load-reports">Refresh</button>
+          </div>
+        </header>
+        <div id="report-list"></div>
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Ban / Unban User</h2>
+        </header>
+        <div class="form-row">
+          <input id="ban-user-id" type="text" placeholder="User ID" />
+          <select id="ban-action">
+            <option value="true">Ban</option>
+            <option value="false">Unban</option>
+          </select>
+          <button id="ban-submit">Apply</button>
+        </div>
+        <div id="ban-result" class="muted"></div>
+      </section>
+    </main>
+
+    <script src="./admin.js"></script>
+  </body>
+</html>

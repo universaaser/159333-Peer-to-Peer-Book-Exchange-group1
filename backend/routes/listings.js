@@ -6,8 +6,11 @@ const auth = require('../middleware/auth');
 // 获取所有listings（支持搜索和过滤）
 router.get('/', async (req, res) => {
   try {
-    const { keyword, course, subject, condition, minPrice, maxPrice } = req.query;
-    const filter = { status: 'available' };
+    const { keyword, course, subject, condition, minPrice, maxPrice, status, includeFlagged } = req.query;
+
+    // 默认只显示 available，admin 可以传 status 覆盖
+    const filter = {};
+    filter.status = status || 'available';
 
     if (keyword) filter.title = { $regex: keyword, $options: 'i' };
     if (course) filter.course = { $regex: course, $options: 'i' };
@@ -18,12 +21,17 @@ router.get('/', async (req, res) => {
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
+    if (includeFlagged === 'true') {
+      delete filter.status; // 不限制状态，返回所有（含 flagged）
+    }
 
     const listings = await Listing.find(filter)
       .populate('seller', 'username rating')
       .sort({ createdAt: -1 });
 
-    res.json(listings);
+    // 兼容 admin panel 期望的 { data: [] } 格式
+    const acceptsDataWrapper = includeFlagged === 'true' || status;
+    res.json(acceptsDataWrapper ? { data: listings } : listings);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -50,6 +58,36 @@ router.get('/:id', async (req, res) => {
     const listing = await Listing.findById(req.params.id)
       .populate('seller', 'username email rating');
     if (!listing) return res.status(404).json({ message: 'Listing not found' });
+    res.json(listing);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// 更新listing状态（admin 或发布者）
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['available', 'reserved', 'sold', 'removed'];
+    if (!status || !allowed.includes(status)) {
+      return res.status(400).json({ message: `status must be one of: ${allowed.join(', ')}` });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: 'Listing not found' });
+
+    // 只有发布者或 admin 可以改状态
+    if (listing.seller.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    listing.status = status;
+    // admin 处理后清除 flagged 标记
+    if (req.user.role === 'admin') {
+      listing.flagged = false;
+      listing.flagReason = '';
+    }
+    await listing.save();
     res.json(listing);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

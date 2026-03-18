@@ -9,7 +9,9 @@ const ListingSchema = new mongoose.Schema({
   course: { type: String, trim: true },
   subject: { type: String, trim: true },
   seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  status: { type: String, enum: ['available', 'sold', 'reserved'], default: 'available' }
+  status:     { type: String, enum: ['pending', 'available', 'sold', 'reserved', 'removed'], default: 'pending' },
+  flagged:    { type: Boolean, default: false },
+  flagReason: { type: String, trim: true, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Listing', ListingSchema);
