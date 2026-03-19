@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
+import { recordView } from '../utils/history'
 
 const conditionBadge = {
   'New':      { bg: '#D1FAE5', color: '#065F46' },
@@ -27,7 +28,7 @@ export default function ListingDetail() {
 
   useEffect(() => {
     api.get(`/listings/${id}`)
-      .then(({ data }) => setListing(data))
+      .then(({ data }) => { setListing(data); recordView(data) })
       .catch(() => toast.error('Listing not found'))
       .finally(() => setLoading(false))
   }, [id])

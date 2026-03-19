@@ -12,6 +12,8 @@ import CreateListing from './pages/CreateListing'
 import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import Transactions from './pages/Transactions'
+import Profile from './pages/Profile'
+
 
 export default function App() {
   return (
@@ -24,10 +26,10 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/listings/:id" element={<ListingDetail />} />
             <Route path="/listings/create" element={
               <ProtectedRoute><CreateListing /></ProtectedRoute>
             } />
+            <Route path="/listings/:id" element={<ListingDetail />} />
             <Route path="/messages" element={
               <ProtectedRoute><Messages /></ProtectedRoute>
             } />
@@ -37,6 +39,10 @@ export default function App() {
             <Route path="/transactions" element={
               <ProtectedRoute><Transactions /></ProtectedRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute><Profile /></ProtectedRoute>
+            } />
+            <Route path="/profile/:id" element={<Profile />} />
           </Routes>
         </main>
       </BrowserRouter>

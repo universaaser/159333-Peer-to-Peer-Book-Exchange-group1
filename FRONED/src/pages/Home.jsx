@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
+import { getTopKeywords } from '../utils/history'
 
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair']
 
@@ -151,6 +152,99 @@ function FilterSelect({ label, options, value, onChange }) {
         <option value="">All</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
+    </div>
+  )
+}
+
+/* ─── Recommended Section ─── */
+function RecommendedSection({ excludeIds }) {
+  const { user } = useAuth()
+  const [recs, setRecs] = useState([])
+  const [keywords, setKeywords] = useState([])
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    if (!user) return
+    const kws = getTopKeywords(user.major, 4)
+    if (kws.length === 0) return
+    setKeywords(kws)
+
+    // Fetch up to 2 most relevant keywords in parallel, merge & deduplicate
+    const top = kws.slice(0, 2)
+    Promise.all(
+      top.map(kw =>
+        api.get('/listings', { params: { subject: kw } })
+          .then(r => r.data)
+          .catch(() => [])
+      )
+    ).then(results => {
+      const seen = new Set(excludeIds)
+      const merged = []
+      for (const list of results) {
+        for (const item of list) {
+          if (!seen.has(item._id)) {
+            seen.add(item._id)
+            merged.push(item)
+          }
+        }
+      }
+      setRecs(merged.slice(0, 10))
+    })
+  }, [user, excludeIds.length])
+
+  if (!user || recs.length === 0) return null
+
+  const scroll = (dir) => {
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: dir * 240, behavior: 'smooth' })
+  }
+
+  return (
+    <div style={{ padding: '28px 24px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div>
+          <h2 style={{
+            fontFamily: "'Lora', serif", fontSize: 20, fontWeight: 600,
+            color: '#1C1917', margin: 0,
+          }}>
+            Recommended for You
+          </h2>
+          {keywords.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+              {keywords.slice(0, 3).map(kw => (
+                <span key={kw} style={{
+                  fontSize: 11, padding: '2px 10px', borderRadius: 999,
+                  background: '#F0FDF4', color: '#2D6A4F', border: '1px solid #BBF7D0',
+                  fontFamily: "'Inter', sans-serif", fontWeight: 500,
+                }}>
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['‹', '›'].map((arrow, i) => (
+            <button key={arrow} onClick={() => scroll(i === 0 ? -1 : 1)} style={{
+              width: 32, height: 32, borderRadius: '50%', border: '1px solid #E7E5E4',
+              background: '#fff', cursor: 'pointer', fontSize: 18, color: '#57534E',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+            }}>
+              {arrow}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div ref={scrollRef} style={{
+        display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8,
+        scrollbarWidth: 'none', msOverflowStyle: 'none',
+      }}>
+        {recs.map(listing => (
+          <div key={listing._id} style={{ flexShrink: 0, width: 180 }}>
+            <BookCard listing={listing} />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -368,6 +462,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ── Recommended ── */}
+      <RecommendedSection excludeIds={listings.map(l => l._id)} />
 
       {/* ── Listings ── */}
       <div style={{ padding: '32px 24px 64px' }}>

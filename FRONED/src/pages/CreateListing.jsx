@@ -84,7 +84,7 @@ export default function CreateListing() {
   const [previews, setPreviews] = useState([])        // base64 preview URLs
   const [form, setForm] = useState({
     title: '', description: '', price: '',
-    condition: 'Good', course: '', subject: '',
+    condition: 'Good', author: '', edition: '', course: '', subject: '',
   })
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
@@ -192,6 +192,21 @@ export default function CreateListing() {
                 <StyledSelect value={form.condition} onChange={e => set('condition', e.target.value)}>
                   {CONDITIONS.map(c => <option key={c}>{c}</option>)}
                 </StyledSelect>
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <Field label="Author">
+                <StyledInput
+                  type="text" placeholder="e.g. Thomas H. Cormen"
+                  value={form.author} onChange={e => set('author', e.target.value)}
+                />
+              </Field>
+              <Field label="Edition">
+                <StyledInput
+                  type="text" placeholder="e.g. 3rd Edition"
+                  value={form.edition} onChange={e => set('edition', e.target.value)}
+                />
               </Field>
             </div>
 

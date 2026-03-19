@@ -41,20 +41,26 @@ export default function Navbar() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ backgroundColor: '#2D6A4F', fontFamily: "'Inter', sans-serif" }}>
-                  {user.username?.[0]?.toUpperCase()}
+              <Link to="/profile" style={{ textDecoration: 'none' }}>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl"
+                  style={{ cursor: 'pointer' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                    style={{ backgroundColor: '#2D6A4F', fontFamily: "'Inter', sans-serif" }}>
+                    {user.username?.[0]?.toUpperCase()}
+                  </div>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500, color: '#1C1917' }}>
+                    {user.username}
+                  </span>
                 </div>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500, color: '#1C1917' }}>
-                  {user.username}
-                </span>
-              </div>
+              </Link>
+
               <button
                 onClick={handleLogout}
-                style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500, color: '#57534E',
+                style={{
+                  fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500, color: '#57534E',
                   background: 'none', border: '1px solid #E7E5E4', borderRadius: 12,
-                  padding: '7px 16px', cursor: 'pointer' }}
+                  padding: '7px 16px', cursor: 'pointer'
+                }}
               >
                 Logout
               </button>
@@ -62,14 +68,18 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/login"
-                style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500,
-                  color: '#57534E', textDecoration: 'none' }}>
+                style={{
+                  fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500,
+                  color: '#57534E', textDecoration: 'none'
+                }}>
                 Sign in
               </Link>
               <Link to="/register"
-                style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,
+                style={{
+                  fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,
                   backgroundColor: '#2D6A4F', color: '#FAFAF8', padding: '8px 18px',
-                  borderRadius: 12, textDecoration: 'none', transition: 'background-color 0.2s' }}
+                  borderRadius: 12, textDecoration: 'none', transition: 'background-color 0.2s'
+                }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#52B788'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#2D6A4F'}
               >
@@ -94,8 +104,8 @@ function NavLink({ to, label, active }) {
         padding: '6px 14px', borderRadius: 10, textDecoration: 'none',
         transition: 'color 0.15s, background-color 0.15s',
       }}
-      onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#2D6A4F'; e.currentTarget.style.backgroundColor = '#F0FDF4' }}}
-      onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#57534E'; e.currentTarget.style.backgroundColor = 'transparent' }}}
+      onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#2D6A4F'; e.currentTarget.style.backgroundColor = '#F0FDF4' } }}
+      onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#57534E'; e.currentTarget.style.backgroundColor = 'transparent' } }}
     >
       {label}
     </Link>
