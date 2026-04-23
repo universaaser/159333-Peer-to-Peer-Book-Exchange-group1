@@ -71,6 +71,7 @@ router.get('/conversations', auth, async (req, res) => {
     const seen = new Set();
     const conversations = [];
     for (const msg of messages) {
+      if (!msg.listing || !msg.sender || !msg.receiver) continue;
       const otherId = msg.sender._id.toString() === req.user.id
         ? msg.receiver._id.toString()
         : msg.sender._id.toString();
