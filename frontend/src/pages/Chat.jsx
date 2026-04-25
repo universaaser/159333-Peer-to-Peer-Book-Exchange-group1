@@ -16,11 +16,19 @@ export default function Chat() {
   const [sending, setSending] = useState(false)
   const bottomRef = useRef(null)
 
+  const markUnreadAsRead = async (msgs) => {
+    const unread = msgs.filter(
+      m => !m.read && m.receiver?._id?.toString() === user?.id?.toString()
+    )
+    await Promise.allSettled(unread.map(m => api.put(`/messages/${m._id}/read`)))
+  }
+
   const fetchMessages = async () => {
     try {
       const params = withUser ? { withUser } : {}
       const { data } = await api.get(`/messages/listing/${listingId}`, { params })
       setMessages(data)
+      markUnreadAsRead(data)
     } catch {
       toast.error('Failed to load messages')
     }
