@@ -24,11 +24,20 @@ export default function ListingDetail() {
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [reportLoading, setReportLoading] = useState(false)
+  const [reviews, setReviews] = useState([])
 
   useEffect(() => {
-    api.get(`/listings/${id}`)
-      .then(({ data }) => setListing(data))
-      .catch(() => toast.error('Listing not found'))
+    Promise.all([
+      api.get(`/listings/${id}`),
+      api.get(`/reviews/listing/${id}`)
+    ])
+      .then(([listingRes, reviewsRes]) => {
+        setListing(listingRes.data)
+        setReviews(reviewsRes.data)
+      })
+      .catch((err) => {
+        if (err.response?.status === 404) toast.error('Listing not found')
+      })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -422,6 +431,69 @@ export default function ListingDetail() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div style={{ marginTop: 48 }}>
+          <h2 style={{ fontFamily: "'Lora', serif", fontSize: 20, fontWeight: 600,
+            color: '#1C1917', marginBottom: 20 }}>
+            Reviews ({reviews.length})
+          </h2>
+          {reviews.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 20px', background: '#fff',
+              borderRadius: 16, border: '1px solid #E7E5E4' }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14,
+                color: '#A8A29E', margin: 0 }}>
+                No reviews yet for this listing.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {reviews.map(review => (
+                <div key={review._id} style={{
+                  background: '#fff', border: '1px solid #E7E5E4', borderRadius: 16,
+                  padding: '18px 20px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%', backgroundColor: '#2D6A4F',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#FAFAF8', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 14,
+                      flexShrink: 0,
+                    }}>
+                      {review.reviewer?.username?.[0]?.toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14,
+                        fontWeight: 600, color: '#1C1917' }}>
+                        {review.reviewer?.username}
+                      </span>
+                      <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <svg key={star} width="14" height="14" viewBox="0 0 24 24"
+                            fill={star <= review.rating ? '#D4A853' : 'none'}
+                            stroke={star <= review.rating ? '#D4A853' : '#D1D5DB'}
+                            strokeWidth="1.5">
+                            <path strokeLinecap="round" strokeLinejoin="round"
+                              d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#A8A29E' }}>
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {review.comment && (
+                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14,
+                      color: '#57534E', lineHeight: 1.6, margin: 0 }}>
+                      {review.comment}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
