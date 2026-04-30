@@ -2,210 +2,105 @@ const express = require('express');
 const router = express.Router();
 const Listing = require('../models/Listing');
 const auth = require('../middleware/auth');
-const admin = require('../middleware/admin');
 
-const buildFilter = (query) => {
-  const {
-    keyword,
-    course,
-    subject,
-    condition,
-    materialType,
-    availability,
-    status,
-    minPrice,
-    maxPrice,
-    tags,
-    includeFlagged
-  } = query;
-
-  const filter = {};
-  if (keyword) filter.$text = { $search: keyword };
-  if (course) filter.course = { $regex: course, $options: 'i' };
-  if (subject) filter.subject = { $regex: subject, $options: 'i' };
-  if (condition) filter.condition = condition;
-  if (materialType) filter.materialType = { $regex: materialType, $options: 'i' };
-  if (availability) filter.availability = availability;
-  const statusFilter = status || 'available';
-  filter.status = statusFilter;
-  if (!includeFlagged) filter.flagged = false;
-
-  if (minPrice || maxPrice) {
-    filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
-  }
-
-  if (tags) {
-    const normalized = tags.split(',').map(t => t.trim()).filter(Boolean);
-    if (normalized.length) filter.tags = { $all: normalized };
-  }
-
-  return filter;
-};
-
+// 获取所有listings（支持搜索和过滤）
 router.get('/', async (req, res) => {
   try {
-    const filter = buildFilter(req.query);
-    const sortField = req.query.sortBy || 'createdAt';
-    const sortOrder = req.query.order === 'asc' ? 1 : -1;
-    const limit = Math.min(Number(req.query.limit) || 30, 60);
-    const page = Math.max(Number(req.query.page) || 0, 0);
+    const { keyword, course, subject, condition, minPrice, maxPrice, status, includeFlagged } = req.query;
 
-    const listings = await Listing.find(filter)
-      .populate('seller', 'username rating role')
-      .sort({ [sortField]: sortOrder })
-      .skip(page * limit)
-      .limit(limit);
+    // 默认只显示 available，admin 可以传 status 覆盖
+    const filter = {};
+    filter.status = status || 'available';
 
-    let filtered = listings;
-    if (req.query.minSellerRating) {
-      const threshold = Number(req.query.minSellerRating);
-      if (!Number.isNaN(threshold)) {
-        filtered = listings.filter(listing => (listing.seller?.rating ?? 0) >= threshold);
-      }
-    }
-
-    res.json({
-      data: filtered,
-      meta: {
-        page,
-        limit,
-        total: filtered.length
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-router.get('/recommended', async (req, res) => {
-  try {
-    const { course, subject } = req.query;
-    const filter = { status: 'available', flagged: false };
+    if (keyword) filter.title = { $regex: keyword, $options: 'i' };
     if (course) filter.course = { $regex: course, $options: 'i' };
     if (subject) filter.subject = { $regex: subject, $options: 'i' };
+    if (condition) filter.condition = condition;
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    if (includeFlagged === 'true') {
+      delete filter.status; // 不限制状态，返回所有（含 flagged）
+    }
 
-    const recommended = await Listing.find(filter)
+    const listings = await Listing.find(filter)
       .populate('seller', 'username rating')
-      .sort({ recommendScore: -1, views: -1, createdAt: -1 })
-      .limit(8);
+      .sort({ createdAt: -1 });
 
-    res.json(recommended);
+    // 兼容 admin panel 期望的 { data: [] } 格式
+    const acceptsDataWrapper = includeFlagged === 'true' || status;
+    res.json(acceptsDataWrapper ? { data: listings } : listings);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-router.get('/moderation/pending', auth, admin, async (req, res) => {
-  try {
-    const listings = await Listing.find({
-      $or: [
-        { flagged: true },
-        { status: { $in: ['pending'] } }
-      ]
-    })
-      .sort({ updatedAt: -1 })
-      .populate('seller', 'username email rating');
-    res.json(listings);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
+// 创建新listing（需要登录）
 router.post('/', auth, async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      price,
-      condition,
-      materialType,
-      images = [],
-      course,
-      subject,
-      tags = []
-    } = req.body;
-
+    const { title, description, price, condition, images, course, subject } = req.body;
     const listing = new Listing({
-      title,
-      description,
-      price,
-      condition,
-      materialType,
-      images,
-      course,
-      subject,
-      tags,
-      seller: req.user.id,
-      availability: 'pending',
-      status: 'pending'
+      title, description, price, condition, images, course, subject,
+      seller: req.user.id
     });
     await listing.save();
-
     res.status(201).json(listing);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-router.patch('/:id/status', auth, admin, async (req, res) => {
-  try {
-    const { status } = req.body;
-    if (!['pending', 'available', 'reserved', 'sold', 'removed'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status value' });
-    }
-
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) return res.status(404).json({ message: 'Listing not found' });
-
-    listing.status = status;
-    listing.availability = status;
-    await listing.save();
-
-    res.json(listing);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
-router.patch('/:id/flag', auth, admin, async (req, res) => {
-  try {
-    const { flagged, reason } = req.body;
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) return res.status(404).json({ message: 'Listing not found' });
-
-    listing.flagged = typeof flagged === 'boolean' ? flagged : !listing.flagged;
-    if (typeof reason === 'string') listing.flagReason = reason;
-    await listing.save();
-    res.json(listing);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
+// 获取单个listing
 router.get('/:id', async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id)
       .populate('seller', 'username email rating');
     if (!listing) return res.status(404).json({ message: 'Listing not found' });
-
-    listing.incrementViews();
-    await listing.save();
-
     res.json(listing);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
+// 更新listing状态（admin 或发布者）
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['available', 'reserved', 'sold', 'removed'];
+    if (!status || !allowed.includes(status)) {
+      return res.status(400).json({ message: `status must be one of: ${allowed.join(', ')}` });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: 'Listing not found' });
+
+    // 只有发布者或 admin 可以改状态
+    if (listing.seller.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    listing.status = status;
+    // admin 处理后清除 flagged 标记
+    if (req.user.role === 'admin') {
+      listing.flagged = false;
+      listing.flagReason = '';
+    }
+    await listing.save();
+    res.json(listing);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// 删除listing（只有发布者可以删除）
 router.delete('/:id', auth, async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
     if (!listing) return res.status(404).json({ message: 'Listing not found' });
-    if (listing.seller.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (listing.seller.toString() !== req.user.id)
       return res.status(403).json({ message: 'Not authorized' });
-    }
     await listing.deleteOne();
     res.json({ message: 'Listing deleted' });
   } catch (err) {

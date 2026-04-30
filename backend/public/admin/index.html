@@ -47,6 +47,8 @@
     </section>
 
     <main class="grid">
+
+      <!-- Pending Listings -->
       <section class="panel">
         <header>
           <h2>Pending Listings</h2>
@@ -55,6 +57,7 @@
         <div id="pending-list"></div>
       </section>
 
+      <!-- Flagged Listings -->
       <section class="panel">
         <header>
           <h2>Flagged Listings</h2>
@@ -63,13 +66,43 @@
         <div id="flagged-list"></div>
       </section>
 
+      <!-- All Listings -->
+      <section class="panel" style="grid-column: span 2;">
+        <header>
+          <h2>All Listings</h2>
+          <div class="row">
+            <select id="all-listings-status">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="available">Available</option>
+              <option value="reserved">Reserved</option>
+              <option value="sold">Sold</option>
+              <option value="removed">Removed</option>
+            </select>
+            <input id="all-listings-keyword" type="text" placeholder="Search keyword..." style="width:160px" />
+            <button id="load-all-listings">Search</button>
+          </div>
+        </header>
+        <div id="all-listings-list"></div>
+      </section>
+
+      <!-- All Users -->
+      <section class="panel" style="grid-column: span 2;">
+        <header>
+          <h2>All Users</h2>
+          <button id="load-users">Refresh</button>
+        </header>
+        <div id="users-list"></div>
+      </section>
+
+      <!-- Reports -->
       <section class="panel">
         <header>
           <h2>Reports</h2>
           <div class="row">
             <select id="report-status">
               <option value="">All</option>
-              <option value="open">Open</option>
+              <option value="open" selected>Open</option>
               <option value="reviewing">Reviewing</option>
               <option value="closed">Closed</option>
             </select>
@@ -79,6 +112,7 @@
         <div id="report-list"></div>
       </section>
 
+      <!-- Ban / Unban -->
       <section class="panel">
         <header>
           <h2>Ban / Unban User</h2>
@@ -93,6 +127,7 @@
         </div>
         <div id="ban-result" class="muted"></div>
       </section>
+
     </main>
 
     <script src="./admin.js"></script>

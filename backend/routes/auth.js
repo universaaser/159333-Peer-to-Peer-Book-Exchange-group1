@@ -4,41 +4,32 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Register
+// 注册
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    // 检查用户是否已存在
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email already registered' });
 
+    // 加密密码
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = new User({ username, email, password: hashedPassword });
     await user.save();
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // 生成JWT
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.status(201).json({ token, user: { id: user._id, username, email } });
 
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        username,
-        email,
-        role: user.role
-      }
-    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// Login
+// 登录
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -46,52 +37,14 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (user.isBanned) return res.status(403).json({ message: 'Account has been banned' });
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    if (user.isBanned) return res.status(403).json({ message: 'Your account has been suspended' });
 
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email,
-        role: user.role
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { id: user._id, username: user.username, email, role: user.role } });
 
-// Promote user to admin (requires secret)
-router.post('/admin/promote', async (req, res) => {
-  try {
-    const secret = req.header('X-Admin-Secret');
-    if (!process.env.ADMIN_SECRET) {
-      return res.status(500).json({ message: 'Admin secret not configured' });
-    }
-    if (secret !== process.env.ADMIN_SECRET) {
-      return res.status(403).json({ message: 'Invalid admin secret' });
-    }
-
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    user.role = 'admin';
-    await user.save();
-
-    res.json({ id: user._id, email: user.email, role: user.role });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

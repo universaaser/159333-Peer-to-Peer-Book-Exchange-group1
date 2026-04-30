@@ -4,16 +4,10 @@ const Review = require('../models/Review');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 
+// POST /api/reviews — submit a review
 router.post('/', auth, async (req, res) => {
   try {
-    const {
-      revieweeId,
-      listingId,
-      transactionId,
-      rating,
-      comment,
-      type
-    } = req.body;
+    const { revieweeId, listingId, transactionId, rating, comment, type } = req.body;
 
     if (!revieweeId || !rating) {
       return res.status(400).json({ message: 'revieweeId and rating are required' });
@@ -24,6 +18,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
+    // Prevent duplicate reviews for the same listing/user combination
     const existing = await Review.findOne({
       reviewer: req.user.id,
       reviewee: revieweeId,
@@ -44,6 +39,7 @@ router.post('/', auth, async (req, res) => {
     });
     await review.save();
 
+    // Update the reviewee's running average rating
     const reviewee = await User.findById(revieweeId);
     if (reviewee) {
       reviewee.updateRating(numericRating);
@@ -56,9 +52,10 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-router.get('/user/:id', auth, async (req, res) => {
+// GET /api/reviews/user/:id — get all reviews for a user
+router.get('/user/:id', async (req, res) => {
   try {
-    const reviews = await Review.find({ reviewee: req.params.id })
+    const reviews = await Review.find({ reviewee: req.params.id, isPublic: true })
       .populate('reviewer', 'username avatar')
       .populate('listing', 'title')
       .sort({ createdAt: -1 });
@@ -68,9 +65,10 @@ router.get('/user/:id', auth, async (req, res) => {
   }
 });
 
-router.get('/listing/:id', auth, async (req, res) => {
+// GET /api/reviews/listing/:id — get all reviews for a listing
+router.get('/listing/:id', async (req, res) => {
   try {
-    const reviews = await Review.find({ listing: req.params.id })
+    const reviews = await Review.find({ listing: req.params.id, isPublic: true })
       .populate('reviewer', 'username avatar')
       .populate('reviewee', 'username avatar')
       .sort({ createdAt: -1 });

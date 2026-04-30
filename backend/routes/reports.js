@@ -6,7 +6,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
-// Create a report (user)
+// POST /api/reports — create a report (any authenticated user)
 router.post('/', auth, async (req, res) => {
   try {
     const { reportedUserId, listingId, messageId, reason, details } = req.body;
@@ -25,6 +25,7 @@ router.post('/', auth, async (req, res) => {
     });
     await report.save();
 
+    // Auto-flag the listing so admin can see it easily
     if (listingId) {
       const listing = await Listing.findById(listingId);
       if (listing) {
@@ -40,7 +41,7 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// List reports (admin)
+// GET /api/reports — list all reports (admin only)
 router.get('/', auth, admin, async (req, res) => {
   try {
     const { status } = req.query;
@@ -59,7 +60,7 @@ router.get('/', auth, admin, async (req, res) => {
   }
 });
 
-// Update report status (admin)
+// PATCH /api/reports/:id/status — update report status (admin only)
 router.patch('/:id/status', auth, admin, async (req, res) => {
   try {
     const { status, adminNote } = req.body;
@@ -80,7 +81,7 @@ router.patch('/:id/status', auth, admin, async (req, res) => {
   }
 });
 
-// Admin user actions: ban/unban
+// PATCH /api/reports/user/:id/ban — ban or unban a user (admin only)
 router.patch('/user/:id/ban', auth, admin, async (req, res) => {
   try {
     const { isBanned } = req.body;
