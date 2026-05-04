@@ -58,6 +58,17 @@ function BookCard({ listing }) {
           }}>
             {listing.condition}
           </span>
+          {/* Sold overlay */}
+          {listing.status === 'sold' && !hovered && (
+            <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(28,25,23,0.5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ backgroundColor: '#1C1917', color: '#FAFAF8',
+                fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 12,
+                padding: '5px 16px', borderRadius: 999, letterSpacing: '0.1em' }}>
+                SOLD
+              </span>
+            </div>
+          )}
           {/* Hover overlay */}
           <div style={{
             position: 'absolute', inset: 0, backgroundColor: 'rgba(28,25,23,0.55)',
@@ -163,11 +174,13 @@ export default function Home() {
   const [showFilters, setShowFilters] = useState(false)
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState({ course: '', subject: '', condition: '', minPrice: '', maxPrice: '' })
+  const [tab, setTab] = useState('available')
 
-  const fetchListings = async (q = query, f = filters) => {
+  const fetchListings = async (q = query, f = filters, t = tab) => {
     setLoading(true)
     try {
       const params = {}
+      if (t === 'sold') params.status = 'sold'
       if (q) params.keyword = q
       if (f.course) params.course = f.course
       if (f.subject) params.subject = f.subject
@@ -175,22 +188,24 @@ export default function Home() {
       if (f.minPrice) params.minPrice = f.minPrice
       if (f.maxPrice) params.maxPrice = f.maxPrice
       const { data } = await api.get('/listings', { params })
-      setListings(data)
+      // available 返回数组，sold 返回 { data: [] }
+      setListings(Array.isArray(data) ? data : (data.data || []))
     } catch { setListings([]) }
     finally { setLoading(false) }
   }
 
-  useEffect(() => { fetchListings() }, [])
+  useEffect(() => { fetchListings(query, filters, tab) }, [tab])
 
   const handleSearch = (e) => {
     e.preventDefault()
-    fetchListings()
+    fetchListings(query, filters, tab)
   }
 
   const handleReset = () => {
+    const empty = { course: '', subject: '', condition: '', minPrice: '', maxPrice: '' }
     setQuery('')
-    setFilters({ course: '', subject: '', condition: '', minPrice: '', maxPrice: '' })
-    fetchListings('', { course: '', subject: '', condition: '', minPrice: '', maxPrice: '' })
+    setFilters(empty)
+    fetchListings('', empty, tab)
   }
 
   const hasActiveFilters = Object.values(filters).some(Boolean)
@@ -373,14 +388,33 @@ export default function Home() {
       <div style={{ padding: '32px 24px 64px' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, color: '#57534E', margin: 0 }}>
-            {loading ? 'Loading...' : (
-              <>
-                <strong style={{ color: '#1C1917', fontSize: 18 }}>{listings.length}</strong>
-                {' '}{listings.length === 1 ? 'book' : 'books'} available
-              </>
-            )}
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* Tab toggle */}
+            <div style={{ display: 'flex', background: '#F5F5F4', borderRadius: 12, padding: 4, gap: 2 }}>
+              {[
+                { key: 'available', label: 'For Sale' },
+                { key: 'sold',      label: 'Sold'     },
+              ].map(({ key, label }) => (
+                <button key={key} onClick={() => setTab(key)} style={{
+                  padding: '7px 20px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 600,
+                  transition: 'all 0.2s',
+                  backgroundColor: tab === key ? (key === 'sold' ? '#1C1917' : '#2D6A4F') : 'transparent',
+                  color: tab === key ? '#FAFAF8' : '#57534E',
+                }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#57534E', margin: 0 }}>
+              {loading ? 'Loading...' : (
+                <>
+                  <strong style={{ color: '#1C1917' }}>{listings.length}</strong>
+                  {' '}{tab === 'sold' ? 'sold' : (listings.length === 1 ? 'book' : 'books available')}
+                </>
+              )}
+            </p>
+          </div>
           <Link
             to={user ? '/listings/create' : '/register'}
             style={{
