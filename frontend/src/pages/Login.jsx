@@ -38,14 +38,24 @@ export default function Login() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
+  const [adminMode, setAdminMode] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await login(form.email, form.password)
-      toast.success('Welcome back!')
-      navigate('/')
+      const data = await login(form.email, form.password)
+      if (adminMode) {
+        if (data.user.role !== 'admin') {
+          toast.error('This account does not have admin privileges')
+          return
+        }
+        toast.success('Welcome, Admin!')
+        navigate('/admin')
+      } else {
+        toast.success('Welcome back!')
+        navigate('/')
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed')
     } finally {
@@ -106,24 +116,57 @@ export default function Login() {
               label="Password" type="password" placeholder="••••••••" required
               value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
             />
+
+            {/* Admin mode toggle */}
+            <button
+              type="button"
+              onClick={() => setAdminMode(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', borderRadius: 12, cursor: 'pointer',
+                border: `1.5px solid ${adminMode ? '#1C1917' : '#E7E5E4'}`,
+                background: adminMode ? '#1C1917' : '#F5F5F4',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span style={{ fontSize: 16 }}>🛡️</span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,
+                color: adminMode ? '#FAFAF8' : '#57534E', flex: 1, textAlign: 'left' }}>
+                Sign in as Administrator
+              </span>
+              <div style={{
+                width: 36, height: 20, borderRadius: 999,
+                backgroundColor: adminMode ? '#D4A853' : '#D1D5DB',
+                position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+              }}>
+                <div style={{
+                  position: 'absolute', top: 3, width: 14, height: 14, borderRadius: '50%',
+                  backgroundColor: '#fff', transition: 'left 0.2s',
+                  left: adminMode ? 19 : 3,
+                }} />
+              </div>
+            </button>
+
             <button
               type="submit"
               disabled={loading}
               style={{
                 width: '100%', padding: '13px',
-                backgroundColor: loading ? '#A8A29E' : '#2D6A4F',
+                backgroundColor: loading ? '#A8A29E' : adminMode ? '#1C1917' : '#2D6A4F',
                 color: '#FAFAF8', border: 'none', borderRadius: 14,
                 fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s, transform 0.1s',
-                boxShadow: '0 2px 8px rgba(45,106,79,0.25)',
+                boxShadow: adminMode
+                  ? '0 2px 8px rgba(28,25,23,0.3)'
+                  : '0 2px 8px rgba(45,106,79,0.25)',
               }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = '#52B788' }}
-              onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundColor = '#2D6A4F' }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundColor = adminMode ? '#292524' : '#52B788' }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundColor = adminMode ? '#1C1917' : '#2D6A4F' }}
               onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)' }}
               onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in...' : adminMode ? '🛡️ Sign In as Admin' : 'Sign In'}
             </button>
           </form>
 
