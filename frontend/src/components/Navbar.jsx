@@ -35,6 +35,19 @@ export default function Navbar() {
           {user && <NavLink to="/listings/create" label="Sell a Book" active={isActive('/listings/create')} />}
           {user && <NavLink to="/messages" label="Messages" active={isActive('/messages')} />}
           {user && <NavLink to="/transactions" label="Transactions" active={isActive('/transactions')} />}
+          {user?.role === 'admin' && (
+            <Link to="/admin" style={{
+              fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 700,
+              color: '#D4A853', backgroundColor: '#1C1917',
+              padding: '5px 14px', borderRadius: 10, textDecoration: 'none',
+              transition: 'background-color 0.15s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#292524'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = '#1C1917'}
+            >
+              🛡️ Admin
+            </Link>
+          )}
         </div>
 
         {/* Right: Auth */}
