@@ -23,6 +23,7 @@ app.use('/api/reports', require('./routes/reports'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/recommendations', require('./routes/recommendations'));
 
 // 测试路由
 app.get('/', (req, res) => {
