@@ -56,6 +56,16 @@ router.get('/listing/:listingId', auth, async (req, res) => {
   }
 });
 
+// 获取当前用户未读消息数量
+router.get('/unread-count', auth, async (req, res) => {
+  try {
+    const count = await Message.countDocuments({ receiver: req.user.id, read: false });
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // 获取当前用户的所有会话列表（每个listing+对方只返回最新一条）
 router.get('/conversations', auth, async (req, res) => {
   try {

@@ -1,10 +1,34 @@
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import api from '../api/axios'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Poll unread count every 30s while logged in
+  useEffect(() => {
+    if (!user) { setUnreadCount(0); return }
+    const fetchUnread = () => {
+      api.get('/messages/unread-count')
+        .then(({ data }) => setUnreadCount(data.count))
+        .catch(() => {})
+    }
+    fetchUnread()
+    const timer = setInterval(fetchUnread, 30000)
+    return () => clearInterval(timer)
+  }, [user])
+
+  // Re-check immediately after navigating (e.g. leaving a chat marks messages read)
+  useEffect(() => {
+    if (!user) return
+    api.get('/messages/unread-count')
+      .then(({ data }) => setUnreadCount(data.count))
+      .catch(() => {})
+  }, [location.pathname])
 
   const handleLogout = () => {
     logout()
@@ -33,7 +57,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-1">
           <NavLink to="/" label="Browse" active={isActive('/')} />
           {user && <NavLink to="/listings/create" label="Sell a Book" active={isActive('/listings/create')} />}
-          {user && <NavLink to="/messages" label="Messages" active={isActive('/messages')} />}
+          {user && <NavLink to="/messages" label="Messages" active={isActive('/messages')} badge={unreadCount} />}
           {user && <NavLink to="/transactions" label="Transactions" active={isActive('/transactions')} />}
           {user?.role === 'admin' && (
             <Link to="/admin" style={{
@@ -96,7 +120,7 @@ export default function Navbar() {
   )
 }
 
-function NavLink({ to, label, active }) {
+function NavLink({ to, label, active, badge }) {
   return (
     <Link
       to={to}
@@ -106,11 +130,21 @@ function NavLink({ to, label, active }) {
         backgroundColor: active ? '#F0FDF4' : 'transparent',
         padding: '6px 14px', borderRadius: 10, textDecoration: 'none',
         transition: 'color 0.15s, background-color 0.15s',
+        display: 'inline-flex', alignItems: 'center', gap: 6,
       }}
       onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#2D6A4F'; e.currentTarget.style.backgroundColor = '#F0FDF4' }}}
       onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#57534E'; e.currentTarget.style.backgroundColor = 'transparent' }}}
     >
       {label}
+      {badge > 0 && (
+        <span style={{
+          backgroundColor: '#DC2626', color: '#fff',
+          borderRadius: 999, fontSize: 10, fontWeight: 700,
+          padding: '1px 6px', lineHeight: 1.5, minWidth: 16, textAlign: 'center',
+        }}>
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
     </Link>
   )
 }

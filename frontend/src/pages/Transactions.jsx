@@ -218,10 +218,18 @@ export default function Transactions() {
   const fetchTransactions = () => {
     api.get('/transactions/my')
       .then(({ data }) => setTransactions(data))
-      .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchTransactions() }, [])
+  useEffect(() => {
+    Promise.all([
+      api.get('/transactions/my'),
+      api.get('/reviews/my'),
+    ]).then(([txRes, reviewRes]) => {
+      setTransactions(txRes.data)
+      const ids = new Set(reviewRes.data.map(r => r.transaction).filter(Boolean))
+      setReviewedIds(ids)
+    }).finally(() => setLoading(false))
+  }, [])
 
   const handleStatusUpdate = async (id, status) => {
     try {

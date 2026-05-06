@@ -220,20 +220,24 @@ export default function ListingDetail() {
             </p>
 
             {/* Seller */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-              backgroundColor: '#F5F5F4', borderRadius: 14, marginBottom: 24 }}>
-              <div style={{ width: 40, height: 40, backgroundColor: '#2D6A4F', borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#FAFAF8', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 16 }}>
-                {listing.seller.username?.[0]?.toUpperCase()}
+            <Link to={`/users/${listing.seller._id}`} style={{ textDecoration: 'none', display: 'block', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                backgroundColor: '#F5F5F4', borderRadius: 14, transition: 'background-color 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#EEEDE9'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F5F5F4'}>
+                <div style={{ width: 40, height: 40, backgroundColor: '#2D6A4F', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#FAFAF8', fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 16 }}>
+                  {listing.seller.username?.[0]?.toUpperCase()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,
+                    color: '#1C1917', margin: 0 }}>{listing.seller.username}</p>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
+                    color: '#A8A29E', margin: 0 }}>View profile →</p>
+                </div>
               </div>
-              <div>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,
-                  color: '#1C1917', margin: 0 }}>{listing.seller.username}</p>
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
-                  color: '#A8A29E', margin: 0 }}>Seller</p>
-              </div>
-            </div>
+            </Link>
 
             {/* Actions */}
             {isOwner ? (
@@ -243,6 +247,17 @@ export default function ListingDetail() {
                     This is your listing.
                   </p>
                 </div>
+                <Link to={`/listings/${listing._id}/edit`}
+                  style={{ display: 'block', padding: '12px', textAlign: 'center',
+                    border: '1.5px solid #B7DFC9', borderRadius: 14,
+                    fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,
+                    color: '#2D6A4F', background: '#fff', textDecoration: 'none',
+                    transition: 'background-color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F0FAF4'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#fff'}
+                >
+                  ✏️ Edit Listing
+                </Link>
                 <button onClick={handleDelete} style={{
                   padding: '12px', border: '1.5px solid #FECACA', borderRadius: 14,
                   fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 600,

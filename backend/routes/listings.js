@@ -6,11 +6,13 @@ const auth = require('../middleware/auth');
 // 获取所有listings（支持搜索和过滤）
 router.get('/', async (req, res) => {
   try {
-    const { keyword, course, subject, condition, minPrice, maxPrice, status, includeFlagged } = req.query;
+    const { keyword, course, subject, condition, minPrice, maxPrice, status, includeFlagged, sellerId } = req.query;
 
     // 默认只显示 available，admin 可以传 status 覆盖
     const filter = {};
     filter.status = status || 'available';
+
+    if (sellerId) filter.seller = sellerId;
 
     if (keyword) filter.title = { $regex: keyword, $options: 'i' };
     if (course) filter.course = { $regex: course, $options: 'i' };
@@ -21,8 +23,8 @@ router.get('/', async (req, res) => {
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
-    if (includeFlagged === 'true') {
-      delete filter.status; // 不限制状态，返回所有（含 flagged）
+    if (includeFlagged === 'true' && !status) {
+      delete filter.status; // 无 status 过滤时返回所有状态（含 pending/flagged）
     }
 
     const listings = await Listing.find(filter)
@@ -58,6 +60,30 @@ router.get('/:id', async (req, res) => {
     const listing = await Listing.findById(req.params.id)
       .populate('seller', 'username email rating');
     if (!listing) return res.status(404).json({ message: 'Listing not found' });
+    res.json(listing);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// 编辑 listing 内容（仅发布者）
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { title, description, price, condition, images, course, subject } = req.body;
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: 'Listing not found' });
+    if (listing.seller.toString() !== req.user.id)
+      return res.status(403).json({ message: 'Not authorized' });
+
+    if (title       !== undefined) listing.title       = title;
+    if (description !== undefined) listing.description = description;
+    if (price       !== undefined) listing.price       = Number(price);
+    if (condition   !== undefined) listing.condition   = condition;
+    if (images      !== undefined) listing.images      = images;
+    if (course      !== undefined) listing.course      = course;
+    if (subject     !== undefined) listing.subject     = subject;
+
+    await listing.save();
     res.json(listing);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

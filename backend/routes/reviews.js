@@ -52,6 +52,16 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// GET /api/reviews/my — reviews submitted by the current user (for checking already-reviewed state)
+router.get('/my', auth, async (req, res) => {
+  try {
+    const reviews = await Review.find({ reviewer: req.user.id }).select('transaction listing');
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // GET /api/reviews/user/:id — get all reviews for a user
 router.get('/user/:id', async (req, res) => {
   try {
