@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -14,6 +14,19 @@ import Messages from './pages/Messages'
 import Chat from './pages/Chat'
 import Transactions from './pages/Transactions'
 import Admin from './pages/Admin'
+import UserProfile from './pages/UserProfile'
+import EditListing from './pages/EditListing'
+
+function MainLayout() {
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen bg-slate-50">
+        <Outlet />
+      </main>
+    </>
+  )
+}
 
 export default function App() {
   return (
@@ -26,31 +39,28 @@ export default function App() {
             <AdminRoute><Admin /></AdminRoute>
           } />
           {/* 普通路由：带 Navbar */}
-          <Route path="*" element={
-            <>
-              <Navbar />
-              <main className="min-h-screen bg-slate-50">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/listings/:id" element={<ListingDetail />} />
-                  <Route path="/listings/create" element={
-                    <ProtectedRoute><CreateListing /></ProtectedRoute>
-                  } />
-                  <Route path="/messages" element={
-                    <ProtectedRoute><Messages /></ProtectedRoute>
-                  } />
-                  <Route path="/messages/:listingId" element={
-                    <ProtectedRoute><Chat /></ProtectedRoute>
-                  } />
-                  <Route path="/transactions" element={
-                    <ProtectedRoute><Transactions /></ProtectedRoute>
-                  } />
-                </Routes>
-              </main>
-            </>
-          } />
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/listings/create" element={
+              <ProtectedRoute><CreateListing /></ProtectedRoute>
+            } />
+            <Route path="/listings/:id/edit" element={
+              <ProtectedRoute><EditListing /></ProtectedRoute>
+            } />
+            <Route path="/listings/:id" element={<ListingDetail />} />
+            <Route path="/users/:id" element={<UserProfile />} />
+            <Route path="/messages" element={
+              <ProtectedRoute><Messages /></ProtectedRoute>
+            } />
+            <Route path="/messages/:listingId" element={
+              <ProtectedRoute><Chat /></ProtectedRoute>
+            } />
+            <Route path="/transactions" element={
+              <ProtectedRoute><Transactions /></ProtectedRoute>
+            } />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>

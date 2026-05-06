@@ -4,7 +4,7 @@ import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
-const LISTING_STATUSES = ['available', 'reserved', 'sold', 'removed']
+const LISTING_STATUSES = ['pending', 'available', 'reserved', 'sold', 'removed']
 
 const statusColors = {
   available: { bg: '#D1FAE5', color: '#065F46' },
