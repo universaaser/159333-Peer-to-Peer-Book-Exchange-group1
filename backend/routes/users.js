@@ -16,6 +16,35 @@ router.get('/', auth, admin, async (req, res) => {
   }
 });
 
+// GET /api/users/me — own full profile (auth required)
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// PUT /api/users/me — update own profile (auth required)
+router.put('/me', auth, async (req, res) => {
+  try {
+    const { bio, contactInfo, avatar, interestedCourses, interestedSubjects } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (bio               !== undefined) user.bio               = bio;
+    if (contactInfo       !== undefined) user.contactInfo       = contactInfo;
+    if (avatar            !== undefined) user.avatar            = avatar;
+    if (interestedCourses  !== undefined) user.interestedCourses  = interestedCourses;
+    if (interestedSubjects !== undefined) user.interestedSubjects = interestedSubjects;
+    await user.save();
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // GET /api/users/:id — public profile (no auth required)
 router.get('/:id', async (req, res) => {
   try {

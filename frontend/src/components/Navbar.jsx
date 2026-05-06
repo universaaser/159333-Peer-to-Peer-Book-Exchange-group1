@@ -78,15 +78,20 @@ export default function Navbar() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ backgroundColor: '#2D6A4F', fontFamily: "'Inter', sans-serif" }}>
-                  {user.username?.[0]?.toUpperCase()}
+              <Link to="/profile" style={{ textDecoration: 'none' }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl"
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#52B788'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = '#E7E5E4'}>
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden"
+                  style={{ backgroundColor: '#2D6A4F', fontFamily: "'Inter', sans-serif", flexShrink: 0 }}>
+                  {user.avatar
+                    ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : user.username?.[0]?.toUpperCase()}
                 </div>
                 <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500, color: '#1C1917' }}>
                   {user.username}
                 </span>
-              </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 500, color: '#57534E',

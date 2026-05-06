@@ -43,7 +43,7 @@ router.post('/login', async (req, res) => {
     if (user.isBanned) return res.status(403).json({ message: 'Your account has been suspended' });
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, username: user.username, email, role: user.role } });
+    res.json({ token, user: { id: user._id, username: user.username, email, role: user.role, avatar: user.avatar } });
 
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

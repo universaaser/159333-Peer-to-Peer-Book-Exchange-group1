@@ -16,6 +16,7 @@ import Transactions from './pages/Transactions'
 import Admin from './pages/Admin'
 import UserProfile from './pages/UserProfile'
 import EditListing from './pages/EditListing'
+import Profile from './pages/Profile'
 
 function MainLayout() {
   return (
@@ -51,6 +52,9 @@ export default function App() {
             } />
             <Route path="/listings/:id" element={<ListingDetail />} />
             <Route path="/users/:id" element={<UserProfile />} />
+            <Route path="/profile" element={
+              <ProtectedRoute><Profile /></ProtectedRoute>
+            } />
             <Route path="/messages" element={
               <ProtectedRoute><Messages /></ProtectedRoute>
             } />

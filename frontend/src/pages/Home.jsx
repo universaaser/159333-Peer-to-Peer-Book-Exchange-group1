@@ -166,6 +166,165 @@ function FilterSelect({ label, options, value, onChange }) {
   )
 }
 
+/* ─── AI Picks Section ─── */
+function AIPicks() {
+  const [state, setState] = useState('loading') // 'loading' | 'empty' | 'no-interests' | 'done'
+  const [picks, setPicks] = useState([])
+
+  useEffect(() => {
+    api.get('/recommendations')
+      .then(({ data }) => {
+        if (data.empty) { setState('no-interests'); return }
+        if (!data.recommendations?.length) { setState('empty'); return }
+        setPicks(data.recommendations)
+        setState('done')
+      })
+      .catch(() => setState('empty'))
+  }, [])
+
+  if (state === 'loading') return (
+    <div style={{ padding: '32px 24px 0' }}>
+      <SectionHeader />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
+        {[...Array(5)].map((_, i) => <BookCardSkeleton key={i} />)}
+      </div>
+    </div>
+  )
+
+  if (state === 'no-interests') return (
+    <div style={{ padding: '32px 24px 0' }}>
+      <SectionHeader />
+      <div style={{ background: 'linear-gradient(135deg, #F0FAF4, #E8F5F0)', borderRadius: 20,
+        border: '1.5px dashed #B7DFC9', padding: '32px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
+        <p style={{ fontFamily: "'Lora', serif", fontWeight: 600, fontSize: 16, color: '#1C1917', marginBottom: 6 }}>
+          Set your interests for personalised picks
+        </p>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#57534E', marginBottom: 16 }}>
+          Add your courses and subjects in your profile — our AI will recommend the most relevant books.
+        </p>
+        <Link to="/profile"
+          style={{ display: 'inline-block', fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 600,
+            backgroundColor: '#2D6A4F', color: '#FAFAF8', padding: '9px 22px',
+            borderRadius: 12, textDecoration: 'none' }}>
+          Update Profile
+        </Link>
+      </div>
+    </div>
+  )
+
+  if (state === 'empty') return (
+    <div style={{ padding: '32px 24px 0' }}>
+      <SectionHeader />
+      <div style={{ background: '#F5F5F4', borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#A8A29E', margin: 0 }}>
+          No listings available for recommendations yet. Check back once more books are listed.
+        </p>
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ padding: '32px 24px 0' }}>
+      <SectionHeader />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
+        {picks.map(({ listing, reason }) => (
+          <AIPickCard key={listing._id} listing={listing} reason={reason} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SectionHeader() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+      <h2 style={{ fontFamily: "'Lora', serif", fontSize: 20, fontWeight: 600, color: '#1C1917', margin: 0 }}>
+        AI Picks for You
+      </h2>
+      <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
+        backgroundColor: '#D1FAE5', color: '#065F46',
+        fontFamily: "'Inter', sans-serif", letterSpacing: '0.04em' }}>
+        ✨ Powered by Gemini
+      </span>
+    </div>
+  )
+}
+
+function AIPickCard({ listing, reason }) {
+  const [hovered, setHovered] = useState(false)
+  const badge = conditionBadge[listing.condition] || { bg: '#F5F5F4', color: '#57534E' }
+
+  return (
+    <Link to={`/listings/${listing._id}`}
+      style={{ textDecoration: 'none', display: 'block' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
+      <div style={{
+        background: '#fff', borderRadius: 20,
+        border: hovered ? '1.5px solid #52B788' : '1.5px solid #B7DFC9',
+        boxShadow: hovered ? '0 12px 32px rgba(45,106,79,0.14)' : '0 2px 8px rgba(45,106,79,0.06)',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all 0.25s ease', overflow: 'hidden', cursor: 'pointer',
+      }}>
+        <div style={{ position: 'relative', aspectRatio: '3/4', background: '#F5F5F4', overflow: 'hidden' }}>
+          {listing.images?.[0] ? (
+            <img src={listing.images[0]} alt={listing.title}
+              style={{ width: '100%', height: '100%', objectFit: 'cover',
+                transform: hovered ? 'scale(1.05)' : 'scale(1)', transition: 'transform 0.5s ease' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 8, color: '#A8A29E' }}>
+              <svg width="52" height="52" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span style={{ fontSize: 12, fontFamily: "'Inter', sans-serif" }}>No image</span>
+            </div>
+          )}
+          <span style={{ position: 'absolute', top: 10, left: 10, padding: '3px 10px',
+            borderRadius: 999, fontSize: 11, fontWeight: 600,
+            fontFamily: "'Inter', sans-serif", backgroundColor: badge.bg, color: badge.color }}>
+            {listing.condition}
+          </span>
+          <span style={{ position: 'absolute', top: 10, right: 10, padding: '3px 8px',
+            borderRadius: 999, fontSize: 10, fontWeight: 700,
+            fontFamily: "'Inter', sans-serif", backgroundColor: '#D1FAE5', color: '#065F46' }}>
+            ✨ AI
+          </span>
+        </div>
+        <div style={{ padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+            <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 600, fontSize: 14,
+              color: '#1C1917', lineHeight: 1.4, flex: 1,
+              display: '-webkit-box', WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 }}>
+              {listing.title}
+            </h3>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 16,
+              color: '#D4A853', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              ${listing.price}
+            </span>
+          </div>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#52B788',
+            fontStyle: 'italic', margin: '0 0 6px',
+            display: '-webkit-box', WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {reason}
+          </p>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#A8A29E',
+            display: 'flex', alignItems: 'center', gap: 4, margin: 0 }}>
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+            </svg>
+            {listing.seller?.username}
+          </p>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 /* ─── Home Page ─── */
 export default function Home() {
   const { user } = useAuth()
@@ -383,6 +542,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ── AI Picks (logged-in users only) ── */}
+      {user && <AIPicks />}
 
       {/* ── Listings ── */}
       <div style={{ padding: '32px 24px 64px' }}>
