@@ -70,7 +70,7 @@ router.put('/:id/status', auth, async (req, res) => {
       return res.status(403).json({ message: 'Buyers can only cancel a transaction' });
     if (isBuyer && transaction.status !== 'pending')
       return res.status(400).json({ message: 'Can only cancel a pending transaction' });
-    if (isSeller && !['confirmed', 'completed', 'cancelled'].includes(status))
+    if (isSeller && !['confirmed', 'cancelled'].includes(status))
       return res.status(400).json({ message: 'Invalid status for seller' });
 
     // 状态流转校验
@@ -94,6 +94,55 @@ router.put('/:id/status', auth, async (req, res) => {
       if (status === 'cancelled')  listing.status = 'available';
       await listing.save();
     }
+
+    res.json(transaction);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// 买家付款：仅限 confirmed 状态，付款后自动 completed
+router.post('/:id/pay', auth, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title price images')
+      .populate('buyer',   'username')
+      .populate('seller',  'username');
+
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    if (transaction.buyer._id.toString() !== req.user.id)
+      return res.status(403).json({ message: 'Only the buyer can pay' });
+    if (transaction.status !== 'confirmed')
+      return res.status(400).json({ message: 'Transaction must be confirmed before payment' });
+
+    transaction.status = 'completed';
+    transaction.paidAt = new Date();
+    await transaction.save();
+
+    // 同步 listing → sold
+    await Listing.findByIdAndUpdate(transaction.listing._id, { status: 'sold' });
+
+    res.json(transaction);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// 获取单条交易详情（用于支付页面）
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('listing', 'title price images course condition')
+      .populate('buyer',   'username email')
+      .populate('seller',  'username');
+
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+
+    const userId = req.user.id;
+    const isBuyer  = transaction.buyer._id.toString()  === userId;
+    const isSeller = transaction.seller._id.toString() === userId;
+    if (!isBuyer && !isSeller)
+      return res.status(403).json({ message: 'Not authorized' });
 
     res.json(transaction);
   } catch (err) {

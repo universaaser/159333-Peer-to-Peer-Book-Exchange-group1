@@ -6,7 +6,8 @@ const TransactionSchema = new mongoose.Schema({
   seller:  { type: mongoose.Schema.Types.ObjectId, ref: 'User',    required: true },
   price:   { type: Number, required: true },
   type:    { type: String, enum: ['sale', 'exchange'], default: 'sale' },
-  status:  { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' }
+  status:  { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
+  paidAt:  { type: Date, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Transaction', TransactionSchema);

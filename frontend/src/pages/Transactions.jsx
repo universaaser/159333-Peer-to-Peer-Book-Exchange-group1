@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
@@ -59,6 +59,7 @@ function StarPicker({ value, onChange }) {
 function TransactionCard({ transaction: t, role, onUpdate, onReview, isReviewed }) {
   const isSeller = role === 'seller'
   const s = statusConfig[t.status] || statusConfig.pending
+  const navigate = useNavigate()
 
   return (
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E7E5E4',
@@ -115,19 +116,19 @@ function TransactionCard({ transaction: t, role, onUpdate, onReview, isReviewed 
                 bg="#fff" color="#DC2626" border="#FECACA" hover="#FEF2F2" />
             </>
           )}
-          {isSeller && t.status === 'confirmed' && (
-            <ActionBtn label="Mark Complete" onClick={() => onUpdate(t._id, 'completed')}
-              bg="#2D6A4F" hover="#52B788" />
-          )}
 
           {/* Buyer actions */}
           {!isSeller && t.status === 'pending' && (
             <ActionBtn label="Cancel Request" onClick={() => onUpdate(t._id, 'cancelled')}
               bg="#fff" color="#DC2626" border="#FECACA" hover="#FEF2F2" />
           )}
+          {!isSeller && t.status === 'confirmed' && (
+            <ActionBtn label="💳 Pay Now" onClick={() => navigate(`/payment/${t._id}`)}
+              bg="#D4A853" color="#1C1917" hover="#C9963E" />
+          )}
 
-          {/* Leave a review — only for completed transactions */}
-          {t.status === 'completed' && (
+          {/* Leave a review — only buyers can review after completion */}
+          {t.status === 'completed' && !isSeller && (
             isReviewed ? (
               <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600,
                 color: '#2D6A4F', display: 'flex', alignItems: 'center', gap: 4 }}>
