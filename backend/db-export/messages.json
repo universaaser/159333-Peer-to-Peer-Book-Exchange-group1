@@ -1,0 +1,200 @@
+[
+  {
+    "_id": "69afa6102eeb730e632c82a7",
+    "sender": "69afa2ef2eeb730e632c829b",
+    "receiver": "69afa52f2eeb730e632c82a5",
+    "listing": "69afa2ef2eeb730e632c829b",
+    "content": "Is this book still available?",
+    "read": false,
+    "createdAt": "2026-03-10T05:03:12.585Z",
+    "updatedAt": "2026-03-10T05:03:12.585Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b770adbd7dc895b0ee01a2",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69b76dcdbd7dc895b0ee0131",
+    "listing": "69b77040bd7dc895b0ee015e",
+    "content": "test",
+    "read": false,
+    "createdAt": "2026-03-16T02:53:33.927Z",
+    "updatedAt": "2026-03-16T02:53:33.927Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b770b7bd7dc895b0ee01b7",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69b76dcdbd7dc895b0ee0131",
+    "listing": "69b77040bd7dc895b0ee015e",
+    "content": "111",
+    "read": false,
+    "createdAt": "2026-03-16T02:53:43.605Z",
+    "updatedAt": "2026-03-16T02:53:43.605Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b770c8bd7dc895b0ee01d1",
+    "sender": "69b76dcdbd7dc895b0ee0131",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69b77040bd7dc895b0ee015e",
+    "content": "?",
+    "read": true,
+    "createdAt": "2026-03-16T02:54:00.426Z",
+    "updatedAt": "2026-05-05T03:46:52.434Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b79906a861461e507c524b",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69b78cb227b97c3d5e13703b",
+    "listing": "69b7962f84cd0716f7bf887e",
+    "content": "兄弟，低价出吗",
+    "read": true,
+    "createdAt": "2026-03-16T05:45:42.119Z",
+    "updatedAt": "2026-05-05T03:46:27.574Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b79915a861461e507c5272",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69b7962f84cd0716f7bf887e",
+    "content": "低不了一点",
+    "read": true,
+    "createdAt": "2026-03-16T05:45:57.561Z",
+    "updatedAt": "2026-05-05T03:46:50.746Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b7a34d12bcd19f8dc5ff56",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69b78cb227b97c3d5e13703b",
+    "listing": "69b7a33312bcd19f8dc5ff39",
+    "content": "111",
+    "read": false,
+    "createdAt": "2026-03-16T06:29:33.769Z",
+    "updatedAt": "2026-03-16T06:29:33.769Z",
+    "__v": 0
+  },
+  {
+    "_id": "69e9d4d364b6bb1069713422",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "Hi",
+    "read": true,
+    "createdAt": "2026-04-23T08:14:11.860Z",
+    "updatedAt": "2026-05-05T03:46:55.942Z",
+    "__v": 0
+  },
+  {
+    "_id": "69e9d4f064b6bb1069713473",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "hi",
+    "read": true,
+    "createdAt": "2026-04-23T08:14:40.254Z",
+    "updatedAt": "2026-05-05T03:46:55.945Z",
+    "__v": 0
+  },
+  {
+    "_id": "69e9d50964b6bb10697134b2",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "hi",
+    "read": true,
+    "createdAt": "2026-04-23T08:15:05.942Z",
+    "updatedAt": "2026-05-05T03:46:55.944Z",
+    "__v": 0
+  },
+  {
+    "_id": "69e9d77144ea1bced4a0b8e8",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69b78cb227b97c3d5e13703b",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "hi",
+    "read": true,
+    "createdAt": "2026-04-23T08:25:21.743Z",
+    "updatedAt": "2026-05-05T03:42:49.117Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ea97355a15668f923b7ee9",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "hi",
+    "read": true,
+    "createdAt": "2026-04-23T22:03:33.647Z",
+    "updatedAt": "2026-05-05T03:46:55.946Z",
+    "__v": 0
+  },
+  {
+    "_id": "69ea97445a15668f923b7f08",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69b78cb227b97c3d5e13703b",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "hi",
+    "read": true,
+    "createdAt": "2026-04-23T22:03:48.458Z",
+    "updatedAt": "2026-05-05T03:42:49.115Z",
+    "__v": 0
+  },
+  {
+    "_id": "69f9683ca15f90c93d71eba3",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d1f664b6bb1069713332",
+    "content": "1",
+    "read": true,
+    "createdAt": "2026-05-05T03:47:08.680Z",
+    "updatedAt": "2026-05-05T03:47:19.668Z",
+    "__v": 0
+  },
+  {
+    "_id": "69f96840a15f90c93d71ebbc",
+    "sender": "69b78cb227b97c3d5e13703b",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69b7962f84cd0716f7bf887e",
+    "content": "1",
+    "read": true,
+    "createdAt": "2026-05-05T03:47:12.293Z",
+    "updatedAt": "2026-05-05T03:47:22.787Z",
+    "__v": 0
+  },
+  {
+    "_id": "69f96a56a15f90c93d71ed25",
+    "sender": "69f96a02a15f90c93d71ed06",
+    "receiver": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d30464b6bb1069713377",
+    "content": "Hi!",
+    "read": true,
+    "createdAt": "2026-05-05T03:56:06.224Z",
+    "updatedAt": "2026-05-05T03:56:12.009Z",
+    "__v": 0
+  },
+  {
+    "_id": "69f96a64a15f90c93d71ed4c",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69f96a02a15f90c93d71ed06",
+    "listing": "69e9d30464b6bb1069713377",
+    "content": "Hi!",
+    "read": true,
+    "createdAt": "2026-05-05T03:56:20.233Z",
+    "updatedAt": "2026-05-05T03:56:25.137Z",
+    "__v": 0
+  },
+  {
+    "_id": "69f96dff115989e254f1ba85",
+    "sender": "69b77012bd7dc895b0ee0153",
+    "receiver": "69f96a02a15f90c93d71ed06",
+    "listing": "69e9d30464b6bb1069713377",
+    "content": "📧 Contact details:\nEmail: 111@qq.com\n123456789",
+    "read": true,
+    "createdAt": "2026-05-05T04:11:43.472Z",
+    "updatedAt": "2026-05-05T04:12:00.621Z",
+    "__v": 0
+  }
+]

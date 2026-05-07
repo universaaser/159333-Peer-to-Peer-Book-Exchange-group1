@@ -1,0 +1,206 @@
+[
+  {
+    "_id": "69afa2ef2eeb730e632c829b",
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "$2b$10$ljTDNMYe3SM9DIcQ/Ibd8eJ0svs1WruOO.avxPMuX9s7LPFC1WhCq",
+    "avatar": "",
+    "rating": 0,
+    "reviewCount": 0,
+    "createdAt": "2026-03-10T04:49:51.202Z",
+    "updatedAt": "2026-03-10T04:49:51.202Z",
+    "__v": 0
+  },
+  {
+    "_id": "69afa52f2eeb730e632c82a5",
+    "username": "testuser1",
+    "email": "test1@example.com",
+    "password": "$2b$10$.cNJi0hLdxtkNCvgt6jLMu97igmuLq0iLysp7uZ4gxNXirjgSN/QC",
+    "avatar": "",
+    "rating": 0,
+    "reviewCount": 0,
+    "createdAt": "2026-03-10T04:59:27.836Z",
+    "updatedAt": "2026-03-10T04:59:27.836Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b26899f1922c126567338d",
+    "username": "admin_user",
+    "email": "admin@test.com",
+    "password": "$2b$10$kK2KmOOtxKbDRyCTILN5k.jOFCssfI.IFESXy/J.wSnDdBWRWpRNq",
+    "avatar": "",
+    "role": "user",
+    "bio": "",
+    "contactInfo": "",
+    "favorites": [],
+    "rating": 0,
+    "ratingTotal": 0,
+    "reviewCount": 0,
+    "isBanned": false,
+    "lastActiveAt": "2026-03-12T07:17:45.918Z",
+    "createdAt": "2026-03-12T07:17:45.920Z",
+    "updatedAt": "2026-03-12T07:17:45.920Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b76dcdbd7dc895b0ee0131",
+    "username": "UserA",
+    "email": "usera@test.com",
+    "password": "$2b$10$8ZlNkJfBcGJS7RUpOlJuOeK7nlrXvR2HOjzxO4zdKZx875F8L6p2a",
+    "avatar": "",
+    "rating": 0,
+    "reviewCount": 0,
+    "createdAt": "2026-03-16T02:41:17.965Z",
+    "updatedAt": "2026-03-16T02:41:17.965Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b77012bd7dc895b0ee0153",
+    "username": "UserB",
+    "email": "111@qq.com",
+    "password": "$2b$10$GCEKojVTw7LVSSmZxySrROYgsmvW/2qoBcihUdTHmGUZpHky8cwHe",
+    "avatar": "/uploads/1778057111051-zcf6irnlgs.jpg",
+    "rating": 5,
+    "reviewCount": 2,
+    "createdAt": "2026-03-16T02:50:58.963Z",
+    "updatedAt": "2026-05-07T07:15:13.065Z",
+    "__v": 3,
+    "bio": "A student studying at Massey University.",
+    "contactInfo": "+64 1234567890",
+    "favorites": [],
+    "isBanned": false,
+    "lastActiveAt": "2026-05-07T07:15:13.065Z",
+    "ratingTotal": 10,
+    "role": "user",
+    "interestedCourses": [
+      "159.333",
+      "157.340"
+    ],
+    "interestedSubjects": [
+      "Computer Science"
+    ]
+  },
+  {
+    "_id": "69b78cb227b97c3d5e13703b",
+    "username": "UserC",
+    "email": "222@qq.com",
+    "password": "$2b$10$uIDFsAAYsgX8jSq.KWkvC.trZAZPSg82vIK411yVqqJynmAnPlT2O",
+    "avatar": "",
+    "role": "admin",
+    "bio": "",
+    "contactInfo": "",
+    "favorites": [],
+    "rating": 0,
+    "ratingTotal": 0,
+    "reviewCount": 0,
+    "isBanned": false,
+    "lastActiveAt": "2026-03-16T04:53:06.138Z",
+    "createdAt": "2026-03-16T04:53:06.140Z",
+    "updatedAt": "2026-03-16T04:53:06.140Z",
+    "__v": 0
+  },
+  {
+    "_id": "69f96a02a15f90c93d71ed06",
+    "username": "Mino",
+    "email": "123@123.com",
+    "password": "$2b$10$fN0Y0wGRxbqSgY9CYub05u5ZogmPcR7new1bKKk3Fa4w4G/.cgcpu",
+    "avatar": "",
+    "role": "user",
+    "bio": "First-year student at Massey University.",
+    "contactInfo": "+64 21 435 4567",
+    "favorites": [],
+    "rating": 0,
+    "ratingTotal": 0,
+    "reviewCount": 0,
+    "isBanned": false,
+    "lastActiveAt": "2026-05-05T03:54:42.009Z",
+    "createdAt": "2026-05-05T03:54:42.010Z",
+    "updatedAt": "2026-05-07T06:09:40.416Z",
+    "__v": 1,
+    "interestedCourses": [
+      "157.340",
+      "159.333"
+    ],
+    "interestedSubjects": [
+      "Computer Science"
+    ]
+  },
+  {
+    "_id": "69fc330768d63cfbc1f0b0a2",
+    "username": "David",
+    "email": "321@321.com",
+    "password": "$2b$10$kIC6jZdqVMaW6w0tGLVtWeuSk9ajH3kj6eIwAgazM9Pin2S2m7v0O",
+    "avatar": "",
+    "role": "user",
+    "bio": "I am a legendary student!",
+    "contactInfo": "+64 882349876",
+    "favorites": [],
+    "interestedCourses": [
+      "157.340",
+      "158.335"
+    ],
+    "interestedSubjects": [
+      "Information Technology"
+    ],
+    "rating": 0,
+    "ratingTotal": 0,
+    "reviewCount": 0,
+    "isBanned": false,
+    "lastActiveAt": "2026-05-07T06:36:55.459Z",
+    "createdAt": "2026-05-07T06:36:55.461Z",
+    "updatedAt": "2026-05-07T06:39:40.310Z",
+    "__v": 1
+  },
+  {
+    "_id": "69fc35ca68d63cfbc1f0b166",
+    "username": "Lucy",
+    "email": "234@234.com",
+    "password": "$2b$10$tTAz3NpbCfbg40ad6pMyzuml92KRlUCAXA/v1lr5F3WnnZTiA0VOa",
+    "avatar": "",
+    "role": "user",
+    "bio": "reach the moon",
+    "contactInfo": "+64 563420976",
+    "favorites": [],
+    "interestedCourses": [
+      "158.335",
+      "159.333"
+    ],
+    "interestedSubjects": [
+      "Computer Science"
+    ],
+    "rating": 0,
+    "ratingTotal": 0,
+    "reviewCount": 0,
+    "isBanned": false,
+    "lastActiveAt": "2026-05-07T06:48:42.609Z",
+    "createdAt": "2026-05-07T06:48:42.610Z",
+    "updatedAt": "2026-05-07T06:51:08.312Z",
+    "__v": 1
+  },
+  {
+    "_id": "69fc37e568d63cfbc1f0b20a",
+    "username": "Faiz",
+    "email": "555@555.com",
+    "password": "$2b$10$EpeF7OB3M3m3Abvj9AwxbOf/fZmdCQM2L1myunKBR3CmWOrEKHaeq",
+    "avatar": "",
+    "role": "user",
+    "bio": "555",
+    "contactInfo": "+64 555555555",
+    "favorites": [],
+    "interestedCourses": [
+      "159.333",
+      "247.112"
+    ],
+    "interestedSubjects": [
+      "Software Engineering"
+    ],
+    "rating": 0,
+    "ratingTotal": 0,
+    "reviewCount": 0,
+    "isBanned": false,
+    "lastActiveAt": "2026-05-07T06:57:41.408Z",
+    "createdAt": "2026-05-07T06:57:41.408Z",
+    "updatedAt": "2026-05-07T06:59:03.000Z",
+    "__v": 1
+  }
+]

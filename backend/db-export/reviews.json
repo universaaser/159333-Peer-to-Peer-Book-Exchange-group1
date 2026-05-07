@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "69f82d85bf27ef813f5418d3",
+    "reviewer": "69b78cb227b97c3d5e13703b",
+    "reviewee": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d1f664b6bb1069713332",
+    "transaction": "69ea97855a15668f923b7f2e",
+    "rating": 5,
+    "comment": "good!",
+    "type": "seller",
+    "isPublic": true,
+    "createdAt": "2026-05-04T05:24:21.510Z",
+    "updatedAt": "2026-05-04T05:24:21.510Z",
+    "__v": 0
+  },
+  {
+    "_id": "69fc3c0168d63cfbc1f0b375",
+    "reviewer": "69b78cb227b97c3d5e13703b",
+    "reviewee": "69b77012bd7dc895b0ee0153",
+    "listing": "69e9d38c64b6bb1069713387",
+    "transaction": "69fc3bcb68d63cfbc1f0b323",
+    "rating": 5,
+    "comment": "good!",
+    "type": "seller",
+    "isPublic": true,
+    "createdAt": "2026-05-07T07:15:13.064Z",
+    "updatedAt": "2026-05-07T07:15:13.064Z",
+    "__v": 0
+  }
+]

@@ -8,6 +8,7 @@ export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   // Poll unread count every 30s while logged in
   useEffect(() => {
@@ -33,11 +34,16 @@ export default function Navbar() {
   const handleLogout = () => {
     logout()
     navigate('/')
+    setMobileOpen(false)
   }
+
+  // Close mobile menu on route change
+  useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
   const isActive = (path) => location.pathname === path
 
   return (
+    <>
     <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-100">
       <div className="w-full px-6 h-16 flex items-center justify-between">
 
@@ -74,8 +80,26 @@ export default function Navbar() {
           )}
         </div>
 
+        {/* Hamburger — mobile only */}
+        <button
+          className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-stone-200"
+          onClick={() => setMobileOpen(v => !v)}
+          aria-label="Toggle menu"
+          style={{ background: '#fff', cursor: 'pointer', flexShrink: 0 }}
+        >
+          {mobileOpen ? (
+            <svg width="18" height="18" fill="none" stroke="#57534E" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" fill="none" stroke="#57534E" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+
         {/* Right: Auth */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
               <Link to="/profile" style={{ textDecoration: 'none' }}
@@ -122,6 +146,47 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+
+    {/* Mobile drawer */}
+    <div className={`mobile-nav-drawer ${mobileOpen ? 'open' : ''}`}>
+      <Link to="/" className={`mobile-nav-link ${isActive('/') ? 'active' : ''}`}>Browse</Link>
+      {user && <Link to="/listings/create" className={`mobile-nav-link ${isActive('/listings/create') ? 'active' : ''}`}>Sell a Book</Link>}
+      {user && (
+        <Link to="/messages" className={`mobile-nav-link ${isActive('/messages') ? 'active' : ''}`}
+          style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          Messages
+          {unreadCount > 0 && (
+            <span style={{ backgroundColor: '#DC2626', color: '#fff', borderRadius: 999,
+              fontSize: 10, fontWeight: 700, padding: '1px 6px' }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
+      )}
+      {user && <Link to="/transactions" className={`mobile-nav-link ${isActive('/transactions') ? 'active' : ''}`}>Transactions</Link>}
+      {user && <Link to="/profile" className={`mobile-nav-link ${isActive('/profile') ? 'active' : ''}`}>My Profile</Link>}
+      {user?.role === 'admin' && <Link to="/admin" className="mobile-nav-link" style={{ color: '#D4A853', fontWeight: 700 }}>🛡️ Admin</Link>}
+      <div style={{ borderTop: '1px solid #F5F5F4', marginTop: 8, paddingTop: 12 }}>
+        {user ? (
+          <button onClick={handleLogout} className="mobile-nav-link"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+              textAlign: 'left', color: '#DC2626' }}>
+            Logout
+          </button>
+        ) : (
+          <>
+            <Link to="/login" className="mobile-nav-link">Sign in</Link>
+            <Link to="/register" className="mobile-nav-link"
+              style={{ backgroundColor: '#2D6A4F', color: '#FAFAF8', fontWeight: 600,
+                display: 'block', textAlign: 'center', marginTop: 8, borderRadius: 12,
+                padding: '10px 14px' }}>
+              Get Started
+            </Link>
+          </>
+        )}
+      </div>
+    </div>
+    </>
   )
 }
 
