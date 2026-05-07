@@ -56,14 +56,23 @@ router.get('/', auth, async (req, res) => {
       return res.json({ empty: false, recommendations: [] });
     }
 
-    // Prefer listings that match user's courses/subjects
-    const courseLower  = courses.map(c => c.toLowerCase());
+    // Normalize course codes: strip dots/spaces/dashes so "159333" matches "159.333"
+    const norm = (s) => s.replace(/[\s.\-]/g, '').toLowerCase();
+    const coursesNorm  = courses.map(norm);
     const subjectLower = subjects.map(s => s.toLowerCase());
 
-    const matched   = allListings.filter(l =>
-      (l.course  && courseLower.some(c => l.course.toLowerCase().includes(c)))  ||
-      (l.subject && subjectLower.some(s => l.subject.toLowerCase().includes(s)))
-    );
+    const courseMatch = (l) => {
+      if (!l.course) return false;
+      const lc = norm(l.course);
+      return coursesNorm.some(c => lc.includes(c) || c.includes(lc));
+    };
+    const subjectMatch = (l) => {
+      if (!l.subject) return false;
+      const ls = l.subject.toLowerCase();
+      return subjectLower.some(s => ls.includes(s) || s.includes(ls));
+    };
+
+    const matched   = allListings.filter(l => courseMatch(l) || subjectMatch(l));
     const unmatched = allListings.filter(l => !matched.includes(l));
 
     // Take up to 15 candidates (matched first, then fill from unmatched)
@@ -82,17 +91,22 @@ router.get('/', auth, async (req, res) => {
     const prompt = `You are a book recommendation assistant for a university student book exchange platform.
 
 Student interests:
-- Courses: ${courses.length ? courses.join(', ') : 'not specified'}
+- Course codes: ${courses.length ? courses.join(', ') : 'not specified'}
 - Subjects: ${subjects.length ? subjects.join(', ') : 'not specified'}
 
 Available books for sale (use the exact listingId values from this list):
 ${JSON.stringify(listingContext, null, 2)}
 
-Recommend the 5 most relevant books for this student based on their course and subject interests.
-If fewer than 5 match well, still return 5 picks choosing the most generally useful ones.
+PRIORITISATION RULES (apply in order):
+1. HIGHEST: books whose "course" field matches any of the student's course codes (ignore dots and spaces, e.g. "159333" matches "159.333")
+2. SECOND: books whose "subject" field relates to any of the student's subjects
+3. LAST RESORT: books that are generally useful for university students in these fields
+
+Recommend the 5 most relevant books following the rules above.
+If fewer than 5 match rules 1–2, fill remaining slots using rule 3.
 IMPORTANT: only use listingId values that appear in the list above. Do not invent new IDs.
 Return ONLY a valid JSON array with no markdown formatting or extra text:
-[{"listingId":"...","reason":"one concise sentence explaining why this suits the student"}]`;
+[{"listingId":"...","reason":"one concise sentence explaining why this suits the student, mentioning the matching course code or subject"}]`;
 
     const listingMap = Object.fromEntries(candidates.map(l => [l._id.toString(), l]));
 

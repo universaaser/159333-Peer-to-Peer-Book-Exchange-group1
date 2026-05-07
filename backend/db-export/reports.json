@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "69b79097b9b0938a530a9eba",
+    "reporter": "69b78cb227b97c3d5e13703b",
+    "reportedUser": "69afa2ef2eeb730e632c829b",
+    "listing": "69afcb5e6ceb04df5c1e5f40",
+    "reason": "faker",
+    "details": "",
+    "status": "reviewing",
+    "adminNote": "111",
+    "createdAt": "2026-03-16T05:09:43.006Z",
+    "updatedAt": "2026-03-16T05:20:37.331Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b7946ddc6e99cacbf2f341",
+    "reporter": "69b78cb227b97c3d5e13703b",
+    "reportedUser": "69afa2ef2eeb730e632c829b",
+    "listing": "69afcb5e6ceb04df5c1e5f40",
+    "reason": "nm",
+    "details": "",
+    "status": "closed",
+    "adminNote": "nm",
+    "createdAt": "2026-03-16T05:26:05.006Z",
+    "updatedAt": "2026-03-16T05:26:18.404Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b79988a861461e507c52bf",
+    "reporter": "69b77012bd7dc895b0ee0153",
+    "reportedUser": "69afa2ef2eeb730e632c829b",
+    "listing": "69afcc916ceb04df5c1e5f42",
+    "reason": "假的",
+    "details": "",
+    "status": "closed",
+    "adminNote": "",
+    "createdAt": "2026-03-16T05:47:52.813Z",
+    "updatedAt": "2026-03-16T05:48:11.756Z",
+    "__v": 0
+  },
+  {
+    "_id": "69b7a9c812bcd19f8dc60094",
+    "reporter": "69b77012bd7dc895b0ee0153",
+    "reportedUser": "69b78cb227b97c3d5e13703b",
+    "listing": "69b7a95a12bcd19f8dc6006a",
+    "reason": "1111",
+    "details": "",
+    "status": "closed",
+    "adminNote": "",
+    "createdAt": "2026-03-16T06:57:12.530Z",
+    "updatedAt": "2026-03-19T20:08:44.540Z",
+    "__v": 0
+  }
+]

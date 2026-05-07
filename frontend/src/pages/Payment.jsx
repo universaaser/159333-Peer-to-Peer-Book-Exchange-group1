@@ -136,8 +136,7 @@ export default function Payment() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#FAFAF8', padding: '40px 24px 80px' }}>
-      <div style={{ maxWidth: 860, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: '1fr 420px', gap: 32, alignItems: 'start' }}>
+      <div style={{ maxWidth: 860, margin: '0 auto' }} className="payment-grid">
 
         {/* ── Left: Order Summary ── */}
         <div>
