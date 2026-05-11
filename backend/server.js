@@ -24,6 +24,7 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/recommendations', require('./routes/recommendations'));
+app.use('/api/admin', require('./routes/admin'));
 
 // 测试路由
 app.get('/', (req, res) => {
