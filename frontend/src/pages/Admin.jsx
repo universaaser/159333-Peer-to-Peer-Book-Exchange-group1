@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+} from 'recharts'
 
 const LISTING_STATUSES = ['pending', 'available', 'reserved', 'sold', 'removed']
 
@@ -25,6 +29,216 @@ function Badge({ status }) {
       textTransform: 'capitalize' }}>
       {status}
     </span>
+  )
+}
+
+/* ─── Analytics Tab ─── */
+function AnalyticsTab() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get('/admin/stats')
+      .then(({ data }) => setStats(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: 60, color: '#A8A29E',
+      fontFamily: "'Inter', sans-serif" }}>Loading analytics...</div>
+  )
+  if (!stats) return null
+
+  const listingPieData = [
+    { name: 'Available', value: stats.listings.available, color: '#2D6A4F' },
+    { name: 'Sold',      value: stats.listings.sold,      color: '#57534E' },
+    { name: 'Reserved',  value: stats.listings.reserved,  color: '#3B82F6' },
+    { name: 'Pending',   value: stats.listings.pending,   color: '#D4A853' },
+    { name: 'Removed',   value: stats.listings.removed,   color: '#DC2626' },
+  ].filter(d => d.value > 0)
+
+  const transactionBarData = [
+    { name: 'Pending',   count: stats.transactions.pending,   fill: '#D4A853' },
+    { name: 'Confirmed', count: stats.transactions.confirmed, fill: '#3B82F6' },
+    { name: 'Completed', count: stats.transactions.completed, fill: '#2D6A4F' },
+    { name: 'Cancelled', count: stats.transactions.cancelled, fill: '#DC2626' },
+  ]
+
+  const reportBarData = [
+    { name: 'Open',      count: stats.reports.open,      fill: '#D4A853' },
+    { name: 'Reviewing', count: stats.reports.reviewing, fill: '#3B82F6' },
+    { name: 'Closed',    count: stats.reports.closed,    fill: '#57534E' },
+  ]
+
+  const userPieData = [
+    { name: 'Regular Users', value: stats.users.active, color: '#2D6A4F' },
+    { name: 'Admins',        value: stats.users.admins, color: '#D4A853' },
+    { name: 'Banned',        value: stats.users.banned, color: '#DC2626' },
+  ].filter(d => d.value > 0)
+
+  const cardStyle = {
+    background: '#fff', borderRadius: 16, border: '1px solid #E7E5E4',
+    padding: '24px', display: 'flex', flexDirection: 'column', gap: 16,
+  }
+  const titleStyle = {
+    fontFamily: "'Lora', serif", fontSize: 16, fontWeight: 600,
+    color: '#1C1917', margin: 0,
+  }
+  const subStyle = {
+    fontFamily: "'Inter', sans-serif", fontSize: 12,
+    color: '#A8A29E', margin: '2px 0 0',
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* Row 1: Summary stat cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        {[
+          { label: 'Total Books',    value: stats.listings.total,      color: '#2D6A4F', bg: '#F0FAF4', icon: '📚' },
+          { label: 'Books Sold',     value: stats.listings.sold,       color: '#57534E', bg: '#F5F5F4', icon: '✅' },
+          { label: 'Total Users',    value: stats.users.total,         color: '#3B82F6', bg: '#EFF6FF', icon: '👤' },
+          { label: 'Transactions',   value: stats.transactions.total,  color: '#D4A853', bg: '#FFFBEB', icon: '🔄' },
+        ].map(({ label, value, color, bg, icon }) => (
+          <div key={label} style={{ background: bg, borderRadius: 14,
+            border: `1px solid ${color}22`, padding: '18px 20px' }}>
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600,
+              color, margin: '0 0 8px' }}>{icon} {label}</p>
+            <p style={{ fontFamily: "'Lora', serif", fontSize: 30, fontWeight: 700,
+              color: '#1C1917', margin: 0 }}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Row 2: Listing pie + User pie */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+
+        {/* Listing Status Distribution */}
+        <div style={cardStyle}>
+          <div>
+            <p style={titleStyle}>Book Listing Status</p>
+            <p style={subStyle}>Distribution of all {stats.listings.total} listings by current status</p>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie data={listingPieData} cx="50%" cy="50%"
+                innerRadius={65} outerRadius={100}
+                paddingAngle={3} dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                labelLine={false}>
+                {listingPieData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(v, n) => [v, n]}
+                contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13, borderRadius: 10 }} />
+              <Legend iconType="circle" wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }} />
+            </PieChart>
+          </ResponsiveContainer>
+          {/* Legend numbers */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {listingPieData.map(d => (
+              <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: d.color }} />
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#57534E' }}>
+                  {d.name}: <strong>{d.value}</strong>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* User Distribution */}
+        <div style={cardStyle}>
+          <div>
+            <p style={titleStyle}>User Account Breakdown</p>
+            <p style={subStyle}>{stats.users.total} registered accounts total</p>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie data={userPieData} cx="50%" cy="50%"
+                innerRadius={65} outerRadius={100}
+                paddingAngle={3} dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                labelLine={false}>
+                {userPieData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(v, n) => [v, n]}
+                contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13, borderRadius: 10 }} />
+              <Legend iconType="circle" wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {userPieData.map(d => (
+              <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: d.color }} />
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#57534E' }}>
+                  {d.name}: <strong>{d.value}</strong>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: Transaction bar + Report bar */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+
+        {/* Transaction Status */}
+        <div style={cardStyle}>
+          <div>
+            <p style={titleStyle}>Transaction Status</p>
+            <p style={subStyle}>{stats.transactions.total} transactions across all users</p>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={transactionBarData} barSize={36}
+              margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                axisLine={false} tickLine={false} />
+              <Tooltip cursor={{ fill: '#F5F5F4' }}
+                contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13, borderRadius: 10 }} />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {transactionBarData.map((entry, i) => (
+                  <Cell key={i} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Report Status */}
+        <div style={cardStyle}>
+          <div>
+            <p style={titleStyle}>Report Status</p>
+            <p style={subStyle}>{stats.reports.total} reports submitted in total</p>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={reportBarData} barSize={36}
+              margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
+                axisLine={false} tickLine={false} />
+              <Tooltip cursor={{ fill: '#F5F5F4' }}
+                contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13, borderRadius: 10 }} />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {reportBarData.map((entry, i) => (
+                  <Cell key={i} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+    </div>
   )
 }
 
@@ -323,12 +537,12 @@ function ActionBtn({ label, onClick, bg, color }) {
 }
 
 /* ─── Main Admin Page ─── */
-const TABS = ['Listings', 'Users', 'Reports']
+const TABS = ['Analytics', 'Listings', 'Users', 'Reports']
 
 export default function Admin() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('Listings')
+  const [activeTab, setActiveTab] = useState('Analytics')
   const [stats, setStats] = useState({ listings: 0, users: 0, openReports: 0 })
 
   useEffect(() => {
@@ -434,9 +648,10 @@ export default function Admin() {
             ))}
           </div>
           <div style={{ padding: 24 }}>
-            {activeTab === 'Listings' && <ListingsTab />}
-            {activeTab === 'Users'    && <UsersTab />}
-            {activeTab === 'Reports'  && <ReportsTab />}
+            {activeTab === 'Analytics' && <AnalyticsTab />}
+            {activeTab === 'Listings'  && <ListingsTab />}
+            {activeTab === 'Users'     && <UsersTab />}
+            {activeTab === 'Reports'   && <ReportsTab />}
           </div>
         </div>
       </div>
