@@ -4,6 +4,65 @@ import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
+function formatMessageTime(iso) {
+  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+function getDateLabel(iso) {
+  const date = new Date(iso)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+  const diffMs = now - date
+  if (isToday) return 'Today'
+  if (isYesterday) return 'Yesterday'
+  if (diffMs < 7 * 24 * 3600000) return date.toLocaleDateString([], { weekday: 'long' })
+  if (diffMs < 365 * 24 * 3600000) return date.toLocaleDateString([], { month: 'long', day: 'numeric' })
+  return date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+// Group consecutive messages from the same sender within 5 minutes, with date separators
+function buildRenderItems(messages) {
+  const items = []
+  let lastDateLabel = null
+  let currentGroup = null
+
+  for (const msg of messages) {
+    const dateLabel = getDateLabel(msg.createdAt)
+    if (dateLabel !== lastDateLabel) {
+      items.push({ type: 'separator', label: dateLabel, key: `sep-${msg._id}` })
+      lastDateLabel = dateLabel
+      currentGroup = null
+    }
+
+    const senderId = msg.sender?._id?.toString()
+    const msgTime = new Date(msg.createdAt)
+
+    if (
+      currentGroup &&
+      currentGroup.senderId === senderId &&
+      msgTime - currentGroup.lastTime < 5 * 60 * 1000
+    ) {
+      currentGroup.msgs.push(msg)
+      currentGroup.lastTime = msgTime
+    } else {
+      currentGroup = {
+        type: 'group',
+        key: `group-${msg._id}`,
+        senderId,
+        sender: msg.sender,
+        msgs: [msg],
+        lastTime: msgTime,
+      }
+      items.push(currentGroup)
+    }
+  }
+
+  return items
+}
+
 export default function Chat() {
   const { listingId } = useParams()
   const [searchParams] = useSearchParams()
@@ -17,12 +76,15 @@ export default function Chat() {
   const [showContactShare, setShowContactShare] = useState(false)
   const [contactNote, setContactNote] = useState('')
   const bottomRef = useRef(null)
+  const containerRef = useRef(null)
+  const isAtBottomRef = useRef(true)
+  const initialLoadDone = useRef(false)
 
-  const markUnreadAsRead = async (msgs) => {
+  const markUnreadAsRead = (msgs) => {
     const unread = msgs.filter(
       m => !m.read && m.receiver?._id?.toString() === user?.id?.toString()
     )
-    await Promise.allSettled(unread.map(m => api.put(`/messages/${m._id}/read`)))
+    Promise.allSettled(unread.map(m => api.put(`/messages/${m._id}/read`)))
   }
 
   const fetchMessages = async () => {
@@ -32,7 +94,7 @@ export default function Chat() {
       setMessages(data)
       markUnreadAsRead(data)
     } catch {
-      toast.error('Failed to load messages')
+      // silently fail on poll
     }
   }
 
@@ -41,10 +103,27 @@ export default function Chat() {
       api.get(`/listings/${listingId}`).then(({ data }) => setListing(data)).catch(() => {}),
       fetchMessages()
     ]).finally(() => setLoading(false))
+
+    const timer = setInterval(fetchMessages, 8000)
+    return () => clearInterval(timer)
   }, [listingId, withUser])
 
+  const handleScroll = () => {
+    const el = containerRef.current
+    if (!el) return
+    isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+  }
+
+  // Scroll to bottom on initial load; afterwards only if near bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!initialLoadDone.current) {
+      if (messages.length > 0) {
+        bottomRef.current?.scrollIntoView()
+        initialLoadDone.current = true
+      }
+    } else if (isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   const handleSend = async (e) => {
@@ -59,6 +138,7 @@ export default function Chat() {
       })
       setMessages(prev => [...prev, data])
       setContent('')
+      isAtBottomRef.current = true
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send')
     } finally {
@@ -80,17 +160,13 @@ export default function Chat() {
       setMessages(prev => [...prev, data])
       setShowContactShare(false)
       setContactNote('')
+      isAtBottomRef.current = true
       toast.success('Contact details sent!')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send')
     } finally {
       setSending(false)
     }
-  }
-
-  const formatTime = (iso) => {
-    const d = new Date(iso)
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   if (loading) return (
@@ -102,6 +178,8 @@ export default function Chat() {
       ))}
     </div>
   )
+
+  const renderItems = buildRenderItems(messages)
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
@@ -139,26 +217,85 @@ export default function Chat() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto pb-2"
+        style={{ display: 'flex', flexDirection: 'column' }}
+      >
         {messages.length === 0 && (
           <p className="text-center text-slate-400 text-sm py-10">No messages yet. Start the conversation!</p>
         )}
-        {messages.map(msg => {
-          const isMe = msg.sender?._id?.toString() === user?.id?.toString()
+
+        {renderItems.map((item) => {
+          if (item.type === 'separator') {
+            return (
+              <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0 12px' }}>
+                <div style={{ flex: 1, height: 1, background: '#E2E8F0' }} />
+                <span style={{
+                  fontSize: 11, color: '#94A3B8', fontFamily: "'Inter', sans-serif",
+                  fontWeight: 500, whiteSpace: 'nowrap', padding: '2px 10px',
+                  background: '#F8FAFC', borderRadius: 99, border: '1px solid #E2E8F0',
+                }}>
+                  {item.label}
+                </span>
+                <div style={{ flex: 1, height: 1, background: '#E2E8F0' }} />
+              </div>
+            )
+          }
+
+          const isMe = item.senderId === user?.id?.toString()
+          const lastIdx = item.msgs.length - 1
+
           return (
-            <div key={msg._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                {!isMe && (
-                  <p className="text-xs text-slate-400 px-1">{msg.sender.username}</p>
-                )}
-                <div className={`px-4 py-2.5 rounded-2xl text-sm ${
-                  isMe
-                    ? 'bg-indigo-600 text-white rounded-tr-sm'
-                    : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
-                }`}>
-                  {msg.content}
-                </div>
-                <p className="text-xs text-slate-400 px-1">{formatTime(msg.createdAt)}</p>
+            <div key={item.key} style={{ marginBottom: 10 }}>
+              {/* Sender name for received messages */}
+              {!isMe && (
+                <p style={{
+                  fontSize: 11, color: '#94A3B8', fontFamily: "'Inter', sans-serif",
+                  marginBottom: 3, paddingLeft: 4,
+                }}>
+                  {item.sender?.username}
+                </p>
+              )}
+
+              {/* Bubbles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: isMe ? 'flex-end' : 'flex-start' }}>
+                {item.msgs.map((msg, mIdx) => (
+                  <div
+                    key={msg._id}
+                    style={{
+                      maxWidth: '75%',
+                      padding: '8px 14px',
+                      fontSize: 14,
+                      fontFamily: "'Inter', sans-serif",
+                      lineHeight: 1.5,
+                      wordBreak: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                      background: isMe ? '#4F46E5' : '#fff',
+                      border: isMe ? 'none' : '1px solid #E2E8F0',
+                      color: isMe ? '#fff' : '#1E293B',
+                      // Facebook-style: flatten corners where bubbles connect
+                      borderRadius: 18,
+                      borderTopRightRadius: isMe ? (mIdx > 0 ? 4 : 18) : 18,
+                      borderBottomRightRadius: isMe ? (mIdx < lastIdx ? 4 : 18) : 18,
+                      borderTopLeftRadius: !isMe ? (mIdx > 0 ? 4 : 18) : 18,
+                      borderBottomLeftRadius: !isMe ? (mIdx < lastIdx ? 4 : 18) : 18,
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                ))}
+              </div>
+
+              {/* Timestamp below the last bubble in the group */}
+              <div style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', marginTop: 4 }}>
+                <span style={{
+                  fontSize: 11, color: '#94A3B8', fontFamily: "'Inter', sans-serif",
+                  paddingLeft: isMe ? 0 : 4, paddingRight: isMe ? 4 : 0,
+                }}>
+                  {formatMessageTime(item.msgs[lastIdx].createdAt)}
+                </span>
               </div>
             </div>
           )
@@ -173,8 +310,6 @@ export default function Chat() {
           <p className="text-xs text-slate-500 mb-3">
             This will be sent as a message — only visible to the person in this chat.
           </p>
-
-          {/* Email (read-only) */}
           <div className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-500 mb-2">
             <svg className="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -182,8 +317,6 @@ export default function Chat() {
             </svg>
             <span className="truncate">{user.email}</span>
           </div>
-
-          {/* Optional extra info */}
           <input
             type="text"
             value={contactNote}
@@ -191,7 +324,6 @@ export default function Chat() {
             placeholder="Phone number or other info (optional)"
             className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent mb-3 bg-white"
           />
-
           <div className="flex gap-2">
             <button
               type="button"

@@ -63,6 +63,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-1">
           <NavLink to="/" label="Browse" active={isActive('/')} />
           {user && <NavLink to="/listings/create" label="Sell a Book" active={isActive('/listings/create')} />}
+          {user && <NavLink to="/my-listings" label="My Books" active={isActive('/my-listings')} />}
           {user && <NavLink to="/messages" label="Messages" active={isActive('/messages')} badge={unreadCount} />}
           {user && <NavLink to="/transactions" label="Transactions" active={isActive('/transactions')} />}
           {user?.role === 'admin' && (
@@ -151,6 +152,7 @@ export default function Navbar() {
     <div className={`mobile-nav-drawer ${mobileOpen ? 'open' : ''}`}>
       <Link to="/" className={`mobile-nav-link ${isActive('/') ? 'active' : ''}`}>Browse</Link>
       {user && <Link to="/listings/create" className={`mobile-nav-link ${isActive('/listings/create') ? 'active' : ''}`}>Sell a Book</Link>}
+      {user && <Link to="/my-listings" className={`mobile-nav-link ${isActive('/my-listings') ? 'active' : ''}`}>My Books</Link>}
       {user && (
         <Link to="/messages" className={`mobile-nav-link ${isActive('/messages') ? 'active' : ''}`}
           style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

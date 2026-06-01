@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area,
 } from 'recharts'
 
 const LISTING_STATUSES = ['pending', 'available', 'reserved', 'sold', 'removed']
@@ -32,10 +33,275 @@ function Badge({ status }) {
   )
 }
 
+/* ─── Drilldown Modal ─── */
+function DrilldownModal({ modal, loading, onClose }) {
+  if (!modal) return null
+
+  const fmt = (iso) => new Date(iso).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  })
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 1000, padding: 24,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: '#fff', borderRadius: 18, width: '100%', maxWidth: 640,
+        maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '20px 24px', borderBottom: '1px solid #E7E5E4',
+        }}>
+          <p style={{ fontFamily: "'Lora', serif", fontSize: 17, fontWeight: 700,
+            color: '#1C1917', margin: 0 }}>
+            {modal.title}
+          </p>
+          <button onClick={onClose} style={{
+            background: '#F5F5F4', border: 'none', borderRadius: 8,
+            width: 32, height: 32, cursor: 'pointer', fontSize: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#57534E',
+          }}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ overflowY: 'auto', padding: '16px 24px', flex: 1 }}>
+          {loading ? (
+            <p style={{ fontFamily: "'Inter', sans-serif", color: '#A8A29E',
+              textAlign: 'center', padding: '32px 0' }}>Loading...</p>
+          ) : modal.items.length === 0 ? (
+            <p style={{ fontFamily: "'Inter', sans-serif", color: '#A8A29E',
+              textAlign: 'center', padding: '32px 0' }}>No records found.</p>
+          ) : modal.type === 'transaction' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {modal.items.map(t => (
+                <div key={t._id} style={{
+                  border: '1px solid #E7E5E4', borderRadius: 12, padding: '14px 16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'flex-start', gap: 8 }}>
+                    <p style={{ fontFamily: "'Lora', serif", fontSize: 14, fontWeight: 600,
+                      color: '#1C1917', margin: '0 0 6px' }}>
+                      {t.listing?.title ?? '—'}
+                    </p>
+                    <Badge status={t.status} />
+                  </div>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
+                    color: '#78716C', margin: '0 0 2px' }}>
+                    Buyer: <strong>{t.buyer?.username}</strong>
+                    {' · '}Seller: <strong>{t.seller?.username}</strong>
+                    {' · '}Type: <strong>{t.type}</strong>
+                  </p>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
+                    color: '#A8A29E', margin: 0 }}>
+                    ${t.price} · {fmt(t.createdAt)}
+                    {t.paidAt && ` · Paid ${fmt(t.paidAt)}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {modal.items.map(r => (
+                <div key={r._id} style={{
+                  border: '1px solid #E7E5E4', borderRadius: 12, padding: '14px 16px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'flex-start', gap: 8 }}>
+                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14,
+                      fontWeight: 600, color: '#1C1917', margin: '0 0 6px' }}>
+                      {r.reason}
+                    </p>
+                    <Badge status={r.status} />
+                  </div>
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
+                    color: '#78716C', margin: '0 0 2px' }}>
+                    Reporter: <strong>{r.reporter?.username}</strong>
+                    {r.reportedUser && <> · Against: <strong>{r.reportedUser?.username}</strong></>}
+                    {r.listing && <> · Listing: <strong>{r.listing?.title}</strong></>}
+                  </p>
+                  {r.details && (
+                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
+                      color: '#A8A29E', margin: '4px 0 0', fontStyle: 'italic' }}>
+                      "{r.details}"
+                    </p>
+                  )}
+                  <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11,
+                    color: '#A8A29E', margin: '4px 0 0' }}>
+                    {fmt(r.createdAt)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Online Users Card ─── */
+function OnlineUsersCard() {
+  const [onlineData, setOnlineData] = useState({ current: 0, history: [] })
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchOnline = async () => {
+    try {
+      const { data } = await api.get('/admin/online')
+      setOnlineData(data)
+      setLastUpdated(new Date())
+    } catch {}
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => {
+    fetchOnline()
+    const id = setInterval(fetchOnline, 30_000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 16,
+      border: '1.5px solid #BBF7D0', padding: '24px',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'absolute', top: -60, right: -60,
+        width: 200, height: 200, borderRadius: '50%',
+        backgroundColor: 'rgba(34,197,94,0.05)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span className="pulse-dot-wrapper">
+              <span className="pulse-dot-ring" />
+              <span className="pulse-dot-core" />
+            </span>
+            <p style={{ fontFamily: "'Lora', serif", fontSize: 16, fontWeight: 600, color: '#1C1917', margin: 0 }}>
+              Online Users
+            </p>
+            <span style={{
+              fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999,
+              backgroundColor: '#D1FAE5', color: '#065F46',
+              fontFamily: "'Inter', sans-serif", letterSpacing: '0.08em',
+            }}>
+              LIVE
+            </span>
+          </div>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: '#A8A29E', margin: 0 }}>
+            Active within the last 5 minutes · auto-refreshes every 30s
+          </p>
+        </div>
+
+        <div style={{ textAlign: 'right' }}>
+          <p style={{
+            fontFamily: "'Lora', serif", fontSize: 48, fontWeight: 700, lineHeight: 1,
+            color: loading ? '#D1D5DB' : '#22C55E', margin: 0,
+            transition: 'color 0.4s ease',
+          }}>
+            {loading ? '—' : onlineData.current}
+          </p>
+          {lastUpdated && (
+            <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: '#A8A29E', margin: '4px 0 0' }}>
+              Updated {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Sparkline */}
+      {onlineData.history.length > 1 ? (
+        <ResponsiveContainer width="100%" height={110}>
+          <AreaChart data={onlineData.history} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+            <defs>
+              <linearGradient id="grad-online" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#22C55E" stopOpacity={0.22} />
+                <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F0FDF4" vertical={false} />
+            <XAxis dataKey="label"
+              tick={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fill: '#A8A29E' }}
+              axisLine={false} tickLine={false} interval="preserveStartEnd" />
+            <YAxis allowDecimals={false}
+              tick={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fill: '#A8A29E' }}
+              axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 12, borderRadius: 10,
+                border: '1px solid #BBF7D0', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}
+              formatter={v => [v, 'Online']}
+              labelStyle={{ color: '#57534E', fontWeight: 600 }} />
+            <Area type="monotone" dataKey="count" stroke="#22C55E" strokeWidth={2.5}
+              fill="url(#grad-online)" dot={false}
+              activeDot={{ r: 4, fill: '#22C55E', stroke: '#fff', strokeWidth: 2 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      ) : (
+        <div style={{
+          height: 110, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          background: '#F0FDF4', borderRadius: 12, gap: 6,
+        }}>
+          <svg width="20" height="20" fill="none" stroke="#86EFAC" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: '#86EFAC', margin: 0 }}>
+            Building history — check back in 30s
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ─── Analytics Tab ─── */
 function AnalyticsTab() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [trendPeriod, setTrendPeriod] = useState('week')
+  const [trendData, setTrendData] = useState(null)
+  const [trendLoading, setTrendLoading] = useState(true)
+  const [modal, setModal] = useState(null)
+  const [modalLoading, setModalLoading] = useState(false)
+
+  const openTransactionDrilldown = async (entry) => {
+    const status = entry.name.toLowerCase()
+    setModal({ title: `${entry.name} Transactions`, type: 'transaction', items: [] })
+    setModalLoading(true)
+    try {
+      const { data } = await api.get(`/admin/transactions?status=${status}`)
+      setModal({ title: `${entry.name} Transactions (${data.length})`, type: 'transaction', items: data })
+    } catch {
+      setModal(null)
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
+  const openReportDrilldown = async (entry) => {
+    const status = entry.name.toLowerCase()
+    setModal({ title: `${entry.name} Reports`, type: 'report', items: [] })
+    setModalLoading(true)
+    try {
+      const { data } = await api.get(`/reports?status=${status}`)
+      setModal({ title: `${entry.name} Reports (${data.length})`, type: 'report', items: data })
+    } catch {
+      setModal(null)
+    } finally {
+      setModalLoading(false)
+    }
+  }
 
   useEffect(() => {
     api.get('/admin/stats')
@@ -43,6 +309,14 @@ function AnalyticsTab() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    setTrendLoading(true)
+    api.get(`/admin/trends?period=${trendPeriod}`)
+      .then(({ data }) => setTrendData(data))
+      .catch(() => setTrendData(null))
+      .finally(() => setTrendLoading(false))
+  }, [trendPeriod])
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: 60, color: '#A8A29E',
@@ -90,6 +364,15 @@ function AnalyticsTab() {
     color: '#A8A29E', margin: '2px 0 0',
   }
 
+  const TREND_SERIES = [
+    { key: 'users',        label: 'New Registrations', color: '#3B82F6', bg: '#EFF6FF', icon: '👤' },
+    { key: 'listings',     label: 'New Listings',       color: '#2D6A4F', bg: '#F0FAF4', icon: '📚' },
+    { key: 'transactions', label: 'New Transactions',   color: '#D4A853', bg: '#FFFBEB', icon: '🔄' },
+    { key: 'reports',      label: 'New Reports',        color: '#DC2626', bg: '#FEF2F2', icon: '⚑' },
+  ]
+
+  const xAxisInterval = trendPeriod === 'month' ? 4 : 0
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -111,7 +394,102 @@ function AnalyticsTab() {
         ))}
       </div>
 
-      {/* Row 2: Listing pie + User pie */}
+      {/* Online Users real-time card */}
+      <OnlineUsersCard />
+
+      {/* Row 2: Activity Trends (time dimension) */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E7E5E4', padding: '24px' }}>
+        {/* Header + period toggle */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <p style={titleStyle}>Activity Trends</p>
+            <p style={subStyle}>New registrations, listings, transactions & reports over time</p>
+          </div>
+          <div style={{ display: 'flex', gap: 6, background: '#F5F5F4', borderRadius: 20, padding: 4 }}>
+            {[['week', 'Past Week'], ['month', 'Past Month'], ['year', 'Past Year']].map(([val, label]) => (
+              <button key={val} onClick={() => setTrendPeriod(val)}
+                style={{
+                  padding: '5px 16px', borderRadius: 16, border: 'none', cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600,
+                  backgroundColor: trendPeriod === val ? '#1C1917' : 'transparent',
+                  color: trendPeriod === val ? '#FAFAF8' : '#78716C',
+                  transition: 'all 0.15s',
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {trendLoading ? (
+          <div style={{ textAlign: 'center', padding: 48, color: '#A8A29E',
+            fontFamily: "'Inter', sans-serif", fontSize: 13 }}>Loading trends...</div>
+        ) : !trendData ? (
+          <div style={{ textAlign: 'center', padding: 48, color: '#A8A29E',
+            fontFamily: "'Inter', sans-serif", fontSize: 13 }}>Could not load trend data.</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            {TREND_SERIES.map(({ key, label, color, bg, icon }) => {
+              const points = trendData.labels.map((name, i) => ({ name, value: trendData[key][i] }))
+              const total  = trendData[key].reduce((a, b) => a + b, 0)
+              const peak   = Math.max(...trendData[key])
+              return (
+                <div key={key}>
+                  {/* Mini header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between',
+                    alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13,
+                      fontWeight: 700, color: '#1C1917', margin: 0 }}>
+                      {icon} {label}
+                    </p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700,
+                        padding: '2px 10px', borderRadius: 20, backgroundColor: bg, color }}>
+                        {total} total
+                      </span>
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600,
+                        padding: '2px 10px', borderRadius: 20, backgroundColor: '#F5F5F4', color: '#78716C' }}>
+                        peak {peak}
+                      </span>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <AreaChart data={points} margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%"  stopColor={color} stopOpacity={0.18} />
+                          <stop offset="95%" stopColor={color} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
+                      <XAxis dataKey="name"
+                        tick={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fill: '#A8A29E' }}
+                        axisLine={false} tickLine={false}
+                        interval={xAxisInterval} />
+                      <YAxis allowDecimals={false}
+                        tick={{ fontFamily: "'Inter', sans-serif", fontSize: 10, fill: '#A8A29E' }}
+                        axisLine={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 12,
+                          borderRadius: 10, border: '1px solid #E7E5E4', boxShadow: '0 4px 12px #0001' }}
+                        formatter={v => [v, label]}
+                        labelStyle={{ color: '#57534E', fontWeight: 600 }} />
+                      <Area type="monotone" dataKey="value"
+                        stroke={color} strokeWidth={2}
+                        fill={`url(#grad-${key})`}
+                        dot={false}
+                        activeDot={{ r: 4, fill: color, stroke: '#fff', strokeWidth: 2 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Row 3: Listing pie + User pie */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
         {/* Listing Status Distribution */}
@@ -136,7 +514,6 @@ function AnalyticsTab() {
               <Legend iconType="circle" wrapperStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13 }} />
             </PieChart>
           </ResponsiveContainer>
-          {/* Legend numbers */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {listingPieData.map(d => (
               <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -184,26 +561,31 @@ function AnalyticsTab() {
         </div>
       </div>
 
-      {/* Row 3: Transaction bar + Report bar */}
+      {/* Row 4: Transaction bar + Report bar */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
         {/* Transaction Status */}
         <div style={cardStyle}>
           <div>
             <p style={titleStyle}>Transaction Status</p>
-            <p style={subStyle}>{stats.transactions.total} transactions across all users</p>
+            <p style={subStyle}>
+              {stats.transactions.total} transactions across all users
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11,
+                color: '#A8A29E', marginLeft: 8 }}>· click a bar to view records</span>
+            </p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={transactionBarData} barSize={36}
-              margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
+              margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
+              style={{ cursor: 'pointer' }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
               <XAxis dataKey="name" tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
                 axisLine={false} tickLine={false} />
               <YAxis allowDecimals={false} tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
                 axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: '#F5F5F4' }}
+              <Tooltip cursor={{ fill: '#F5F5F420' }}
                 contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13, borderRadius: 10 }} />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+              <Bar dataKey="count" radius={[6, 6, 0, 0]} onClick={openTransactionDrilldown}>
                 {transactionBarData.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
                 ))}
@@ -216,19 +598,24 @@ function AnalyticsTab() {
         <div style={cardStyle}>
           <div>
             <p style={titleStyle}>Report Status</p>
-            <p style={subStyle}>{stats.reports.total} reports submitted in total</p>
+            <p style={subStyle}>
+              {stats.reports.total} reports submitted in total
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11,
+                color: '#A8A29E', marginLeft: 8 }}>· click a bar to view records</span>
+            </p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={reportBarData} barSize={36}
-              margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
+              margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
+              style={{ cursor: 'pointer' }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
               <XAxis dataKey="name" tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
                 axisLine={false} tickLine={false} />
               <YAxis allowDecimals={false} tick={{ fontFamily: "'Inter', sans-serif", fontSize: 12 }}
                 axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: '#F5F5F4' }}
+              <Tooltip cursor={{ fill: '#F5F5F420' }}
                 contentStyle={{ fontFamily: "'Inter', sans-serif", fontSize: 13, borderRadius: 10 }} />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+              <Bar dataKey="count" radius={[6, 6, 0, 0]} onClick={openReportDrilldown}>
                 {reportBarData.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
                 ))}
@@ -238,6 +625,11 @@ function AnalyticsTab() {
         </div>
       </div>
 
+      <DrilldownModal
+        modal={modal}
+        loading={modalLoading}
+        onClose={() => setModal(null)}
+      />
     </div>
   )
 }

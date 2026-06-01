@@ -1,18 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const Listing = require('../models/Listing');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 
 // 获取所有listings（支持搜索和过滤）
 router.get('/', async (req, res) => {
   try {
-    const { keyword, course, subject, condition, minPrice, maxPrice, status, includeFlagged, sellerId } = req.query;
+    const { keyword, course, subject, condition, minPrice, maxPrice, status, includeFlagged, sellerId, sellerName } = req.query;
 
     // 默认只显示 available，admin 可以传 status 覆盖
     const filter = {};
     filter.status = status || 'available';
 
     if (sellerId) filter.seller = sellerId;
+
+    if (sellerName) {
+      const matchedUsers = await User.find({ username: { $regex: sellerName, $options: 'i' } }).select('_id');
+      filter.seller = { $in: matchedUsers.map(u => u._id) };
+    }
 
     if (keyword) filter.title = { $regex: keyword, $options: 'i' };
     if (course) filter.course = { $regex: course, $options: 'i' };

@@ -18,6 +18,7 @@ import UserProfile from './pages/UserProfile'
 import EditListing from './pages/EditListing'
 import Profile from './pages/Profile'
 import Payment from './pages/Payment'
+import MyListings from './pages/MyListings'
 
 function MainLayout() {
   return (
@@ -64,6 +65,9 @@ export default function App() {
             } />
             <Route path="/transactions" element={
               <ProtectedRoute><Transactions /></ProtectedRoute>
+            } />
+            <Route path="/my-listings" element={
+              <ProtectedRoute><MyListings /></ProtectedRoute>
             } />
             <Route path="/payment/:transactionId" element={
               <ProtectedRoute><Payment /></ProtectedRoute>

@@ -332,7 +332,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
   const [query, setQuery] = useState('')
-  const [filters, setFilters] = useState({ course: '', subject: '', condition: '', minPrice: '', maxPrice: '' })
+  const [filters, setFilters] = useState({ course: '', subject: '', condition: '', minPrice: '', maxPrice: '', sellerName: '' })
   const [tab, setTab] = useState('available')
 
   const fetchListings = async (q = query, f = filters, t = tab) => {
@@ -346,6 +346,7 @@ export default function Home() {
       if (f.condition) params.condition = f.condition
       if (f.minPrice) params.minPrice = f.minPrice
       if (f.maxPrice) params.maxPrice = f.maxPrice
+      if (f.sellerName) params.sellerName = f.sellerName
       const { data } = await api.get('/listings', { params })
       // available 返回数组，sold 返回 { data: [] }
       setListings(Array.isArray(data) ? data : (data.data || []))
@@ -361,7 +362,7 @@ export default function Home() {
   }
 
   const handleReset = () => {
-    const empty = { course: '', subject: '', condition: '', minPrice: '', maxPrice: '' }
+    const empty = { course: '', subject: '', condition: '', minPrice: '', maxPrice: '', sellerName: '' }
     setQuery('')
     setFilters(empty)
     fetchListings('', empty, tab)
@@ -492,7 +493,7 @@ export default function Home() {
 
           {/* Collapsible filter body */}
           <div style={{
-            maxHeight: showFilters ? 200 : 0,
+            maxHeight: showFilters ? 300 : 0,
             opacity: showFilters ? 1 : 0,
             overflow: 'hidden',
             transition: 'max-height 0.3s ease, opacity 0.3s ease',
@@ -508,6 +509,8 @@ export default function Home() {
                 value={filters.course} onChange={v => setFilters(f => ({ ...f, course: v }))} />
               <FilterField label="Subject" placeholder="e.g. Mathematics"
                 value={filters.subject} onChange={v => setFilters(f => ({ ...f, subject: v }))} />
+              <FilterField label="Seller" placeholder="e.g. john_doe"
+                value={filters.sellerName} onChange={v => setFilters(f => ({ ...f, sellerName: v }))} />
               <FilterSelect label="Condition" options={CONDITIONS}
                 value={filters.condition} onChange={v => setFilters(f => ({ ...f, condition: v }))} />
               <div>
