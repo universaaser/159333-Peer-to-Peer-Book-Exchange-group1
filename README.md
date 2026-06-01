@@ -198,13 +198,6 @@ After importing the sample database, you can log in with the following accounts:
 
 ---
 
-## Contributors
-
-| Name | Role |
-|------|------|
-| *(Add your group member names here)* | |
-
----
 
 ## License
 
